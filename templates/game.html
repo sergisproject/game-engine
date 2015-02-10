@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<!--
+    Copyright (c) 2015, SerGIS Project Contributors. All rights reserved.
+    Use of this source code is governed by the MIT License, which can be found
+    in the LICENSE.txt file.
+-->
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>SerGIS Game</title>
+    <link rel="stylesheet" type="text/css" href="/static/game.css">
+    <!-- ESRI ArcGIS API stylesheet -->
+    <link rel="stylesheet" type="text/css" href="http://js.arcgis.com/3.11/esri/css/esri.css">
+</head>
+
+<body>
+    <div id="main-wrapper" style="display: none;">
+        <header class="noselect">
+            <h1>SerGIS</h1>
+            <div id="main-toolbox" class="toolbox">
+                <ul id="main-toolbox-buttons" class="buttons"></ul>
+                <span id="main-toolbox-status"></span>
+            </div>
+            <div class="account">Logged in as <span id="main-displayName"></span>.<br><button id="main-logout">Log Out</button></div>
+        </header>
+        
+        <section id="map-container"></section>
+        <section id="content-container"></section>
+    </div>
+    
+    <div id="login-wrapper" style="display: none;">
+        <header class="noselect">
+            <h1>SerGIS</h1>
+        </header>
+        <section>
+            <h2>Log In</h2>
+            <form id="login-form"><fieldset>
+                <p id="login-errmsg" class="errmsg" style="display: none;"></p>
+                <table><tbody>
+                    <tr><td>Username:</td><td><input id="login-username"></td></tr>
+                    <tr><td>Password:</td><td><input id="login-password" type="password"></td></tr>
+                </tbody></table>
+                <p><input type="submit" value="Log In"></p>
+            </fieldset></form>
+        </section>
+    </div>
+    
+    <div id="loading" class="overall">
+        <table><tbody><tr><td>
+            <!--[if lt IE 9]><p>Please upgrade to a <a href="http://whatbrowser.org/">modern browser</a>.</p><![endif]-->
+            <!--[if gte IE 9]>-->
+            <p id="loading-text"><noscript>Please enable JavaScript.</noscript></p>
+            <!--<![endif]-->
+        </td></tr></tbody></table>
+    </div>
+
+<!--
+  ************************
+  ** External libraries **
+  ************************
+-->
+
+<!-- socket.io -->
+<script type="text/javascript" src="{{socket-io-src}}"></script>
+
+<!-- ESRI ArcGIS API -->
+<script type="text/javascript" src="http://js.arcgis.com/3.11/"></script>
+
+<!--
+  **********************
+  ** SerGIS libraries **
+  **********************
+-->
+
+<!-- ES6 Promise polyfill -->
+<script type="text/javascript" src="/static/es6-promise-2.0.0.min.js"></script>
+
+<!-- SerGIS main library -->
+<script type="text/javascript" src="/static/main.js"></script>
+
+</body>
+</html>
