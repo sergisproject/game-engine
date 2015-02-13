@@ -9,65 +9,76 @@ var fs = require("fs"),
     path = require("path");
 
 // required modules
-var express = require("express"),
-    app = express(),
-    server = require("http").Server(app),
-    io = require("socket.io")(server);
+// NOTE: express, http, and socket.io are require'd below if needed.
+
+// our modules
+var config = require("./config"),
+    exitHandler = require("./modules/exitHandler");
+
 
 /**
- * SerGIS Server configuration.
- * @todo Move to external file.
+ * The different modules for the different sections of the HTTP server.
+ * The keys are the filenames of the modules in `modules/pageServers/`, and the
+ * values are the Express paths.
  */
-var config = {
-    /** Default server port */
-    PORT: process.env.PORT || 3000,
-    
-    /** Templates directory */
-    TEMPLATES_DIR: path.join(__dirname, "templates"),
-    
-    /** Web resources directory (mapped to http://this-nodejs-server/static/...) */
-    STATIC_DIR: path.join(__dirname, "static"),
+var HTTP_SERVERS = {
+    "contentServer": "/content",
+    "gameServer": "/game",
+    // This one catches everything else
+    "homepageServer": "/"
 };
 
-/**
- * Functions to call right before exiting.
- * @type Array.<Function>
- */
-var exitHandlers = [];
 
 ///////////////////////////////////////////////////////////////////////////////
-// Set up cleanup on exit
-function setupCleanup() {
-    // So that the program will not close instantly when Ctrl+C is pressed, etc.
-    process.stdin.resume();
+// Start HTTP server (if enabled)
+var app, server;
+if (config.ENABLE_HTTP_SERVER) {
+    console.log("Starting SerGIS Game Engine HTTP server on port " + config.PORT);
+    
+    // Create Express server instance
+    var express = require("express");
+    app = express();
+    server = require("http").Server(app);
+    
+    // Listen with the HTTP server on our port
+    server.listen(config.PORT);
 
-    // Catch app closing
-    process.on("exit", function () {
-        console.log("Exiting...");
-        exitHandlers.forEach(function (item) {
-            try {
-                item();
-            } catch (err) {
-                console.error("Error running exit handler: ", err);
-            }
-        });
-        return true;
-    });
-
-    // Catch Ctrl+C event
-    process.on("SIGINT", function () {
-        console.log("Caught SIGINT...");
-        process.exit(2);
-    });
+    // Create handler for serving "/static"
+    app.use("/static", express.static(config.STATIC_DIR));
+    
+    // Create handlers for our other page servers (see HTTP_SERVERS above)
+    for (var moduleName in HTTP_SERVERS) {
+        if (HTTP_SERVERS.hasOwnProperty(moduleName)) {
+            app.use(HTTP_SERVERS[moduleName], require("./modules/pageServers/" + moduleName));
+        }
+    }
 }
 
-///////////////////////////////////////////////////////////////////////////////
-// Start HTTP server
-console.log("Starting SerGIS server on port " + config.PORT);
-server.listen(config.PORT);
+////////////////////////////////////////////////////////////////////////////////
+// Start socket server (if enabled)
+var io;
+if (config.ENABLE_SOCKET_SERVER) {
+    // Check if we already have the Express HTTP server
+    if (app) {
+        console.log("Starting SerGIS Game Engine socket server with HTTP server");
+        // Use the same server instance for the socket.io server
+        io = require("socket.io")(server);
+    } else {
+        console.log("Starting SerGIS Game Engine socket server on port " + config.PORT);
+        // There's no HTTP server yet; make socket.io listen all by its lonesomes
+        io = require("socket.io").listen(config.PORT);
+    }
+    // Initialize all of our socket-related stuff
+    require("./modules/socketServer").init(io);
+}
 
-// Create handler for serving "/lib"
-app.use("/static", express.static(config.STATIC_DIR));
-
-// Set up cleanup
-setupCleanup();
+////////////////////////////////////////////////////////////////////////////////
+// Make sure we started something
+if (!config.ENABLE_HTTP_SERVER && !config.ENABLE_SOCKET_SERVER) {
+    // Nope, we didn't actually do anything.
+    console.error("Neither HTTP nor socket server enabled!");
+} else {
+    console.log("");
+    // Set up cleanup
+    exitHandler.init();
+}
