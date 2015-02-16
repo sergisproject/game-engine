@@ -60,7 +60,15 @@ var TEST_CONTENT_COMPONENTS = {
     
     4: {
         type: "map",
-        data: {},
+        data: {
+            map: {
+                latitude: 0,
+                longitude: 0,
+                zoom: 5,
+                basemap: "",
+                layers: []
+            }
+        },
         vars: {}
     },
     
