@@ -24,7 +24,8 @@ var TEST_CONTROLS = {
         type: "type here",
         data: {
             // data here
-        }
+        },
+        js: "JavaScript code to throw into rendered document"
     }
     */
     
@@ -32,21 +33,24 @@ var TEST_CONTROLS = {
         type: "basic-html",
         data: {
             html: "<strong><i>SOME</i> HTML</strong>"
-        }
+        },
+        js: 'document.body.style.backgroundColor = "rgb(" + Math.floor(Math.random()*255) + "," + Math.floor(Math.random()*255) + "," + Math.floor(Math.random()*255) + ")";'
     },
     
     2: {
         type: "basic-html",
         data: {
             html: "<strong><i>SOME</i> HTML</strong> #2"
-        }
+        },
+        js: 'document.body.style.backgroundColor = "rgb(" + Math.floor(Math.random()*255) + "," + Math.floor(Math.random()*255) + "," + Math.floor(Math.random()*255) + ")";'
     },
     
     3: {
         type: "basic-html",
         data: {
             html: "<strong><i>SOME</i> HTML</strong> #3"
-        }
+        },
+        js: 'document.body.style.backgroundColor = "rgb(" + Math.floor(Math.random()*255) + "," + Math.floor(Math.random()*255) + "," + Math.floor(Math.random()*255) + ")";'
     },
 };
 ////////////////////////////////////////////////////////////////////////////////
@@ -81,7 +85,8 @@ router.get("/:id", function (req, res) {
             // NOTE: The following are written to JS variables!
             "js-socket-io-location": (config.SOCKET_IO_ORIGIN ? "" : "window.location.origin + ") + JSON.stringify(config.SOCKET_IO_ORIGIN + "/content"),
             "js-content-type": JSON.stringify(TEST_CONTROLS[id].type),
-            "js-content-data": JSON.stringify(TEST_CONTROLS[id].data)
+            "js-content-data": JSON.stringify(TEST_CONTROLS[id].data).replace(/<\/script>/g, '</scr" + "ipt>'),
+            "content-component-js": TEST_CONTROLS[id].js
         });
     });
 });

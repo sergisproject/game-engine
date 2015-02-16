@@ -8,9 +8,10 @@
     function makeContentIframe(content) {
         var iframe = document.createElement("iframe");
         iframe.style.position = "absolute";
-        for (var cssName in content.geometry) {
-            if (content.geometry.hasOwnProperty(cssName)) {
-                iframe.style[cssName] = content.geometry[cssName];
+        iframe.style.borderStyle = "none";
+        for (var cssName in content.css) {
+            if (content.css.hasOwnProperty(cssName)) {
+                iframe.style[cssName] = content.css[cssName];
             }
         }
         iframe.setAttribute("src", "/content/" + content.content_id);

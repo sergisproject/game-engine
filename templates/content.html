@@ -11,6 +11,37 @@
     <link rel="stylesheet" type="text/css" href="/static/content.css">
     <!-- ESRI ArcGIS API stylesheet -->
     <link rel="stylesheet" type="text/css" href="http://js.arcgis.com/3.11/esri/css/esri.css">
+
+    <!--
+      ***************************
+      ** Third-party Libraries **
+      ***************************
+    -->
+    <!-- socket.io -->
+    <script type="text/javascript" src="{{socket-io-src}}"></script>
+    <!-- ESRI ArcGIS API -->
+    <script type="text/javascript" src="http://js.arcgis.com/3.11/"></script>
+    <!-- ES6 Promise polyfill -->
+    <script type="text/javascript" src="/static/es6-promise-2.0.0.min.js"></script>
+
+    <!--
+      **********************
+      ** SerGIS Libraries **
+      **********************
+    -->
+    <!-- SerGIS Game Engine - common library -->
+    <script type="text/javascript" src="/static/common.js"></script>
+    <script type="text/javascript">
+    sergis.socketLocation = {{{js-socket-io-location}}};
+    sergis.content = {
+        type: {{{js-content-type}}},
+        data: {{{js-content-data}}}
+    };
+    </script>
+    <!-- SerGIS Game Engine - Content Renderer library -->
+    <script type="text/javascript" src="/static/content.js"></script>
+    <!-- SerGIS Game Engine - Content Component ({{{content-type}}}) Renderer library -->
+    <script type="text/javascript" src="/components-static/{{content-type}}.js"></script>
 </head>
 
 <body>
@@ -19,43 +50,11 @@
 {{{content-component-html}}}
 <!-- End Content Component ({{{content-type}}}) -->
 
-<!--
-  ***************************
-  ** Third-party Libraries **
-  ***************************
--->
-
-<!-- socket.io -->
-<script type="text/javascript" src="{{socket-io-src}}"></script>
-
-<!-- ESRI ArcGIS API -->
-<script type="text/javascript" src="http://js.arcgis.com/3.11/"></script>
-
-<!-- ES6 Promise polyfill -->
-<script type="text/javascript" src="/static/es6-promise-2.0.0.min.js"></script>
-
-<!--
-  **********************
-  ** SerGIS Libraries **
-  **********************
--->
-
-<!-- SerGIS Game Engine - common library -->
-<script type="text/javascript" src="/static/common.js"></script>
-
 <script type="text/javascript">
-sergis.socketLocation = {{{js-socket-io-location}}};
-sergis.content = {
-    type: {{{js-content-type}}},
-    data: {{{js-content-data}}}
-};
+// Start Content Component JS
+{{{content-component-js}}}
+// End Content Component JS
 </script>
-
-<!-- SerGIS Game Engine - Content Renderer library -->
-<script type="text/javascript" src="/static/content.js"></script>
-
-<!-- SerGIS Game Engine - Content Component ({{{content-type}}}) Renderer library -->
-<script type="text/javascript" src="/components-static/{{content-type}}.js"></script>
 
 </body>
 </html>

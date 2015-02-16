@@ -21,7 +21,7 @@ var config = require("../../config"),
 var TEST_GAMES = {
     "testgame": [
         {
-            geometry: {
+            css: {
                 left: "0",
                 top: "0",
                 width: "100%",
@@ -31,21 +31,21 @@ var TEST_GAMES = {
         },
         
         {
-            geometry: {
+            css: {
                 left: "0",
                 top: "100px",
-                bottom: "0",
-                width: "50%"
+                width: "50%",
+                height: "calc(100% - 100px)"
             },
             content_id: 2
         },
         
         {
-            geometry: {
+            css: {
                 right: "0",
                 top: "100px",
-                bottom: "0",
-                width: "50%"
+                width: "50%",
+                height: "calc(100% - 100px)"
             },
             content_id: 3
         }
