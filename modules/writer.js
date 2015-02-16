@@ -21,8 +21,52 @@ if (config.DEVELOPMENT) {
     console.log("Using mu cache");
 }
 
-// Set templates directory
-mu.root = config.TEMPLATES_DIR;
+/**
+ * Set a different root temporarily, or reset the root to its default.
+ * If a new temporary root is set, it will be reset back to the default after
+ * the next writer.* function is called.
+ *
+ * @param {string} [root] - The new root (or leave undefined to reset the root).
+ */
+exports.setTemporaryRoot = function (root) {
+    if (root) {
+        mu.root = root;
+    } else {
+        mu.root = config.TEMPLATES_DIR;
+    }
+};
+
+// Set the default templates directory now
+exports.setTemporaryRoot();
+
+/**
+ * Render a template and get its contents.
+ *
+ * @param {string} template - The name of the template to use.
+ * @param {object} vars - Variables for the template.
+ * @param {Function} callback - Function to call with 2 arguments: 
+ *                   The error (if any), and
+ *                   The data.
+ */
+exports.render = function (template, vars, callback) {
+    if (config.DEVELOPMENT) {
+        mu.clearCache();
+    }
+    var stream = mu.compileAndRender(template, vars);
+    var data = "";
+    stream.on("data", function (chunk) {
+        data += chunk;
+    });
+    stream.on("error", function (err) {
+        callback(err);
+    });
+    stream.on("end", function () {
+        callback(null, data);
+    });
+    
+    // Reset any possible temporary root that might have existed
+    exports.setTemporaryRoot();
+};
 
 /**
  * Write a template to an output stream.
@@ -49,8 +93,18 @@ exports.write = function (res, template, vars, status, headers) {
         mu.clearCache();
     }
     mu.compileAndRender(template, vars || {}).pipe(res);
+    
+    // Reset any possible temporary root that might have existed
+    exports.setTemporaryRoot();
 };
 
+/**
+ * Write an error page to an output stream.
+ *
+ * @param res - The Express response object.
+ * @param {number} num - The HTTP error number.
+ * @param {string} [details] - Details about the error.
+ */
 exports.writeError = function (res, num, details) {
     var httpError = "";
     switch (num) {
@@ -78,4 +132,6 @@ exports.writeError = function (res, num, details) {
         httpError: httpError,
         details: details
     }, num);
+    
+    // Any possible temporary root that might have existed will be reset in exports.write.
 };
