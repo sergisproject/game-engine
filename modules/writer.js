@@ -52,29 +52,30 @@ exports.write = function (res, template, vars, status, headers) {
 };
 
 exports.writeError = function (res, num, details) {
-    if (!details) {
-        switch (num) {
-            case 400:
-                details = "Bad Request";
-                break;
-            case 403:
-                details = "Access Denied";
-                break;
-            case 404:
-                details = "Not Found";
-                break;
-            case 405:
-                details = "Method Not Allowed";
-                break;
-            case 406:
-                details = "Not Acceptable";
-                break;
-            case 500:
-                details = "Internal Server Error";
-                break;
-            default:
-                details = "";
-        }
+    var httpError = "";
+    switch (num) {
+        case 400:
+            httpError = "Bad Request";
+            break;
+        case 403:
+            httpError = "Access Denied";
+            break;
+        case 404:
+            httpError = "Not Found";
+            break;
+        case 405:
+            httpError = "Method Not Allowed";
+            break;
+        case 406:
+            httpError = "Not Acceptable";
+            break;
+        case 500:
+            httpError = "Internal Server Error";
+            break;
     }
-    exports.write(res, "error.html", {num: num, details: details}, num);
+    exports.write(res, "error.html", {
+        num: num,
+        httpError: httpError,
+        details: details
+    }, num);
 };

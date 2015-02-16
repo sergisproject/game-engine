@@ -15,12 +15,14 @@
 
 <body>
 
-
+<!-- Start Content Component ({{{content-type}}}) -->
+{{{content-component-html}}}
+<!-- End Content Component ({{{content-type}}}) -->
 
 <!--
-  ************************
-  ** External libraries **
-  ************************
+  ***************************
+  ** Third-party Libraries **
+  ***************************
 -->
 
 <!-- socket.io -->
@@ -29,28 +31,31 @@
 <!-- ESRI ArcGIS API -->
 <script type="text/javascript" src="http://js.arcgis.com/3.11/"></script>
 
-<!--
-  **********************
-  ** SerGIS libraries **
-  **********************
--->
-
 <!-- ES6 Promise polyfill -->
 <script type="text/javascript" src="/static/es6-promise-2.0.0.min.js"></script>
+
+<!--
+  **********************
+  ** SerGIS Libraries **
+  **********************
+-->
 
 <!-- SerGIS Game Engine - common library -->
 <script type="text/javascript" src="/static/common.js"></script>
 
 <script type="text/javascript">
-sergis.socketLocation = {{{socket-io-location}}};
+sergis.socketLocation = {{{js-socket-io-location}}};
 sergis.content = {
-    type: {{{content-type}}},
-    data: {{{content-data}}}
+    type: {{{js-content-type}}},
+    data: {{{js-content-data}}}
 };
 </script>
 
 <!-- SerGIS Game Engine - Content Renderer library -->
 <script type="text/javascript" src="/static/content.js"></script>
+
+<!-- SerGIS Game Engine - Content Component ({{{content-type}}}) Renderer library -->
+<script type="text/javascript" src="/components-static/{{content-type}}.js"></script>
 
 </body>
 </html>

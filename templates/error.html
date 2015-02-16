@@ -18,7 +18,8 @@
         <h2>HTTP Error {{num}}</h2>
         <div id="main" role="main">
             <article>
-                <p>{{#details}}{{details}}{{/details}}</p>
+                {{#httpError}}<p>{{httpError}}</p>{{/httpError}}
+                {{#details}}<p>{{details}}</p>{{/details}}
             </article>
         </div>
     </div>

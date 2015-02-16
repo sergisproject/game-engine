@@ -12,26 +12,9 @@
 </head>
 
 <body>
-    <div id="main-wrapper" style="display: none;"></div>
+    <div id="main-wrapper"></div>
     
-    <div id="login-wrapper" style="display: none;">
-        <header class="noselect">
-            <h1>SerGIS</h1>
-        </header>
-        <section>
-            <h2>Log In</h2>
-            <form id="login-form"><fieldset>
-                <p id="login-errmsg" class="errmsg" style="display: none;"></p>
-                <table><tbody>
-                    <tr><td>Username:</td><td><input id="login-username"></td></tr>
-                    <tr><td>Password:</td><td><input id="login-password" type="password"></td></tr>
-                </tbody></table>
-                <p><input type="submit" value="Log In"></p>
-            </fieldset></form>
-        </section>
-    </div>
-    
-    <div id="loading" class="overall">
+    <div id="loading" class="overall" style="display: none;">
         <table><tbody><tr><td>
             <!--[if lt IE 9]><p>Please upgrade to a <a href="http://whatbrowser.org/">modern browser</a>.</p><![endif]-->
             <!--[if gte IE 9]>-->
@@ -41,28 +24,33 @@
     </div>
 
 <!--
-  ************************
-  ** External libraries **
-  ************************
+  ***************************
+  ** Third-party Libraries **
+  ***************************
 -->
 
 <!-- socket.io -->
 <script type="text/javascript" src="{{socket-io-src}}"></script>
 
+<!-- ES6 Promise polyfill -->
+<script type="text/javascript" src="/static/es6-promise-2.0.0.min.js"></script>
+
 <!--
   **********************
-  ** SerGIS libraries **
+  ** SerGIS Libraries **
   **********************
 -->
 
+<!-- SerGIS Game Engine - common library -->
+<script type="text/javascript" src="/static/common.js"></script>
+
 <script type="text/javascript">
-var sergis_game = {
-    name: "{{{game-name}}}"
+sergis.socketLocation = {{{js-socket-io-location}}};
+sergis.game = {
+    id: {{{js-game-id}}},
+    contentComponents: {{{js-game-content-components}}}
 };
 </script>
-
-<!-- ES6 Promise polyfill -->
-<script type="text/javascript" src="/static/es6-promise-2.0.0.min.js"></script>
 
 <!-- SerGIS Game Engine - Game State Renderer library -->
 <script type="text/javascript" src="/static/game.js"></script>

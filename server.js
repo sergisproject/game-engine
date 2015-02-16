@@ -46,6 +46,9 @@ if (config.ENABLE_HTTP_SERVER) {
     // Create handler for serving "/static"
     app.use("/static", express.static(config.STATIC_DIR));
     
+    // Create handler for serving "/components-static"
+    app.use("/components-static", express.static(config.CONTENT_COMPONENTS_STATIC_DIR));
+    
     // Create handlers for our other page servers (see HTTP_SERVERS above)
     for (var moduleName in HTTP_SERVERS) {
         if (HTTP_SERVERS.hasOwnProperty(moduleName)) {

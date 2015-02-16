@@ -5,7 +5,6 @@
 */
 
 var path = require("path");
-
 var config = {};
 
 /** Whether we're in development mode */
@@ -18,8 +17,14 @@ config.PORT = process.env.PORT || 3000;
 /** Templates directory */
 config.TEMPLATES_DIR = path.join(__dirname, "templates");
 
-/** Web resources directory (mapped to http://this-nodejs-server/static/...) */
+/** Static resources directory (mapped to http://this-nodejs-server/static/...) */
 config.STATIC_DIR = path.join(__dirname, "static");
+
+/** Content Components static directory */
+config.CONTENT_COMPONENTS_STATIC_DIR = path.join(__dirname, "content-components", "static");
+
+/** Content Components template directory */
+config.CONTENT_COMPONENTS_TEMPLATES_DIR = path.join(__dirname, "content-components", "templates");
 
 /** Whether to start the HTTP server */
 config.ENABLE_HTTP_SERVER = true;

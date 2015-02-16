@@ -12,9 +12,23 @@ var fs = require("fs"),
 var config = require("../config");
 
 
-// The socket.io server instance
-var io;
+// The "/game" socket
+var gameSocket;
 
-exports.init = function (_io) {
-    io = _io;
+// The "/content" socket
+var contentSocket;
+
+exports.init = function (io) {
+    // Initialize "/game" socket
+    io.of("/game").on("connection", function (socket) {
+        gameSocket = socket;
+        
+        //gameSocket.on("contentLoaded", function (..., ..., callback) {
+        //});
+    });
+    
+    // Initialize socket
+    io.of("/content").on("connection", function (socket) {
+        contentSocket = socket;
+    });
 };

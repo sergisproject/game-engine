@@ -74,6 +74,8 @@ if (typeof console.error != "function") console.error = console.log;
         sergis.addLoadHandler = function (handler) {
             handler();
         };
+        // Now, tell the server that we're ready
+        sergis.socket.emit("contentLoaded");
     }
     
     /**

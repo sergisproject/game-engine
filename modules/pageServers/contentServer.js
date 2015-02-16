@@ -27,10 +27,27 @@ var TEST_CONTROLS = {
         }
     }
     */
+    
     1: {
-        type: "basic",
-        data: {}
-    }
+        type: "basic-html",
+        data: {
+            html: "<strong><i>SOME</i> HTML</strong>"
+        }
+    },
+    
+    2: {
+        type: "basic-html",
+        data: {
+            html: "<strong><i>SOME</i> HTML</strong> #2"
+        }
+    },
+    
+    3: {
+        type: "basic-html",
+        data: {
+            html: "<strong><i>SOME</i> HTML</strong> #3"
+        }
+    },
 };
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -41,17 +58,32 @@ router.get("/:id", function (req, res) {
     var id = Number(req.params.id);
     if (isNaN(id) || !TEST_CONTROLS.hasOwnProperty(id)) {
         // "Bad Request"
-        writer.writeError(res, 400);
-    } else {
-        writer.write(res, "control.html", {
+        writer.writeError(res, 400, "Invalid control ID.");
+        return;
+    }
+    
+    var control = TEST_CONTROLS[id];
+    fs.readFile(path.join(config.CONTENT_COMPONENTS_TEMPLATES_DIR, control.type + ".html"), {
+        encoding: "utf-8"
+    }, function (err, data) {
+        if (err) {
+            console.log("Error reading Content Component file:", err);
+            // "Internal Server Error"
+            writer.writeError(res, 500, "Error reading Content Component file.");
+            return;
+        }
+        
+        writer.write(res, "content.html", {
             "socket-io-src": config.SOCKET_IO_ORIGIN + "/socket.io/socket.io.js",
+            "content-type": TEST_CONTROLS[id].type,
+            "content-component-html": data,
             
             // NOTE: The following are written to JS variables!
-            "socket-io-location": config.SOCKET_IO_ORIGIN + "/content",
-            "content-type": JSON.stringify(TEST_CONTROLS[id].type),
-            "content-data": JSON.stringify(TEST_CONTROLS[id].data)
+            "js-socket-io-location": (config.SOCKET_IO_ORIGIN ? "" : "window.location.origin + ") + JSON.stringify(config.SOCKET_IO_ORIGIN + "/content"),
+            "js-content-type": JSON.stringify(TEST_CONTROLS[id].type),
+            "js-content-data": JSON.stringify(TEST_CONTROLS[id].data)
         });
-    }
+    });
 });
 
 // Export the router
