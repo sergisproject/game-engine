@@ -67,6 +67,8 @@
             // Load everything we need from the ArcGIS API
             initRequire().then(function () {
                 // Initialize the map
+                var mapContainer = document.getElementById("map-container");
+                mapContainer.innerHTML = "";
                 // Make a sub-container
                 var mapElem = document.createElement("div");
                 mapElem.id = "map-container-ARCGIS_API";
@@ -124,6 +126,46 @@
                 });
             }, reject).catch(sergis.error);
         });
+    }
+    
+    
+    // Add load handler for init
+    sergis.addLoadHandler(function () {
+        init().then(function () {
+            console.log("LOADED!");
+        }, sergis.error).catch(sergis.error);
+    });
+    
+    
+    
+    
+    /**
+     * Handle when a drawing is done being drawn.
+     */
+    function onDrawEnd(event) {
+        var index = ++userDrawingIndex,
+            geometry = event.geometry;
+        // Draw the object on the map
+        var style = {};
+        checkDrawStyle(style);
+        drawObjects("userDrawing_" + index, [geometry], style);
+        // Deactivate the drawing and put the zoom slider back
+        gToolbar.deactivate();
+        gMap.showZoomSlider();
+        // Depending on the type of drawing, report a status message back to the user
+        if (geometry.type == "point") {
+            alert("Latitude: " + geometry.getLatitude().toFixed(3) + ", Longitude: " + geometry.getLongitude().toFixed(3));
+            /*
+            sergis.main.status({
+                type: "text",
+                value: "Latitude: " + geometry.getLatitude().toFixed(3) + ", Longitude: " + geometry.getLongitude().toFixed(3)
+            });
+            */
+        } else if (geometry.type == "polygon") {
+            findArea(geometry);
+        } else {
+            findLength(geometry);
+        }
     }
     
     /**
