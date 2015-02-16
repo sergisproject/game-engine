@@ -57,6 +57,7 @@
     // with 3 arrays: `geometries`, `symbols`, and `graphics`).
     var drawnObjects = {};
     
+    
     /**
      * Initialize the map.
      *
