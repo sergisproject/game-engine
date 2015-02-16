@@ -57,6 +57,18 @@ var TEST_CONTENT_COMPONENTS = {
             js: 'document.body.style.backgroundColor = "rgb(" + Math.floor(Math.random()*255) + "," + Math.floor(Math.random()*255) + "," + Math.floor(Math.random()*255) + ")";'
         }
     },
+    
+    4: {
+        type: "map",
+        data: {},
+        vars: {}
+    },
+    
+    5: {
+        type: "dialog",
+        data: {},
+        vars: {}
+    }
 };
 ////////////////////////////////////////////////////////////////////////////////
 
