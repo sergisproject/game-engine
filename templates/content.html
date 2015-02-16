@@ -38,6 +38,17 @@
 <!-- ES6 Promise polyfill -->
 <script type="text/javascript" src="/static/es6-promise-2.0.0.min.js"></script>
 
+<!-- SerGIS Game Engine - common library -->
+<script type="text/javascript" src="/static/common.js"></script>
+
+<script type="text/javascript">
+sergis.socketLocation = {{{socket-io-location}}};
+sergis.content = {
+    type: {{{content-type}}},
+    data: {{{content-data}}}
+};
+</script>
+
 <!-- SerGIS Game Engine - Content Renderer library -->
 <script type="text/javascript" src="/static/content.js"></script>
 
