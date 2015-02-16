@@ -18,39 +18,44 @@ var config = require("../../config"),
 
 
 ////////////////////////////////////////////////////////////////////////////////
-var TEST_CONTROLS = {
+var TEST_CONTENT_COMPONENTS = {
     /*
     id: {
-        type: "type here",
+        type: "Content Component type here",
         data: {
-            // data here
+            // Content Component data here
         },
-        js: "JavaScript code to throw into rendered document"
+        vars: {
+            // Content Component template vars here
+        }
     }
     */
     
     1: {
         type: "basic-html",
-        data: {
-            html: "<strong><i>SOME</i> HTML</strong>"
-        },
-        js: 'document.body.style.backgroundColor = "rgb(" + Math.floor(Math.random()*255) + "," + Math.floor(Math.random()*255) + "," + Math.floor(Math.random()*255) + ")";'
+        data: {},
+        vars: {
+            html: "<strong><i>SOME</i> HTML</strong>",
+            js: 'document.body.style.backgroundColor = "rgb(" + Math.floor(Math.random()*255) + "," + Math.floor(Math.random()*255) + "," + Math.floor(Math.random()*255) + ")";'
+        }
     },
     
     2: {
         type: "basic-html",
-        data: {
-            html: "<strong><i>SOME</i> HTML</strong> #2"
-        },
-        js: 'document.body.style.backgroundColor = "rgb(" + Math.floor(Math.random()*255) + "," + Math.floor(Math.random()*255) + "," + Math.floor(Math.random()*255) + ")";'
+        data: {},
+        vars: {
+            html: "<strong><i>SOME</i> HTML</strong> #2",
+            js: 'document.body.style.backgroundColor = "rgb(" + Math.floor(Math.random()*255) + "," + Math.floor(Math.random()*255) + "," + Math.floor(Math.random()*255) + ")";'
+        }
     },
     
     3: {
         type: "basic-html",
-        data: {
-            html: "<strong><i>SOME</i> HTML</strong> #3"
-        },
-        js: 'document.body.style.backgroundColor = "rgb(" + Math.floor(Math.random()*255) + "," + Math.floor(Math.random()*255) + "," + Math.floor(Math.random()*255) + ")";'
+        data: {},
+        vars: {
+            html: "<strong><i>SOME</i> HTML</strong> #3",
+            js: 'document.body.style.backgroundColor = "rgb(" + Math.floor(Math.random()*255) + "," + Math.floor(Math.random()*255) + "," + Math.floor(Math.random()*255) + ")";'
+        }
     },
 };
 ////////////////////////////////////////////////////////////////////////////////
@@ -60,33 +65,31 @@ var TEST_CONTROLS = {
 // Handler for GET requests to /content/CONTENT ID HERE
 router.get("/:id", function (req, res) {
     var id = Number(req.params.id);
-    if (isNaN(id) || !TEST_CONTROLS.hasOwnProperty(id)) {
+    if (isNaN(id) || !TEST_CONTENT_COMPONENTS.hasOwnProperty(id)) {
         // "Bad Request"
         writer.writeError(res, 400, "Invalid control ID.");
         return;
     }
     
-    var control = TEST_CONTROLS[id];
-    fs.readFile(path.join(config.CONTENT_COMPONENTS_TEMPLATES_DIR, control.type + ".html"), {
-        encoding: "utf-8"
-    }, function (err, data) {
+    var contentComponent = TEST_CONTENT_COMPONENTS[id];
+    writer.setTemporaryRoot(config.CONTENT_COMPONENTS_TEMPLATES_DIR);
+    writer.render(contentComponent.type + ".html", contentComponent.vars || {}, function (err, data) {
         if (err) {
-            console.log("Error reading Content Component file:", err);
+            console.log("Error rendering Content Component template:", err);
             // "Internal Server Error"
-            writer.writeError(res, 500, "Error reading Content Component file.");
+            writer.writeError(res, 500, "Error rendering Content Component template.");
             return;
         }
         
         writer.write(res, "content.html", {
             "socket-io-src": config.SOCKET_IO_ORIGIN + "/socket.io/socket.io.js",
-            "content-type": TEST_CONTROLS[id].type,
+            "content-type": contentComponent.type,
             "content-component-html": data,
             
             // NOTE: The following are written to JS variables!
             "js-socket-io-location": (config.SOCKET_IO_ORIGIN ? "" : "window.location.origin + ") + JSON.stringify(config.SOCKET_IO_ORIGIN + "/content"),
-            "js-content-type": JSON.stringify(TEST_CONTROLS[id].type),
-            "js-content-data": JSON.stringify(TEST_CONTROLS[id].data).replace(/<\/script>/g, '</scr" + "ipt>'),
-            "content-component-js": TEST_CONTROLS[id].js
+            "js-content-type": JSON.stringify(contentComponent.type),
+            "js-content-data": JSON.stringify(contentComponent.data).replace(/<\/script>/g, '</scr" + "ipt>')
         });
     });
 });
