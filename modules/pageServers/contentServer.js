@@ -81,6 +81,8 @@ var TEST_CONTENT_COMPONENTS = {
 ////////////////////////////////////////////////////////////////////////////////
 
 
+// Writer for Content Component templates
+var contentComponentTemplateWriter = new writer.Writer(config.CONTENT_COMPONENTS_TEMPLATES_DIR);
 
 // Handler for GET requests to /content/CONTENT ID HERE
 router.get("/:id", function (req, res) {
@@ -92,8 +94,7 @@ router.get("/:id", function (req, res) {
     }
     
     var contentComponent = TEST_CONTENT_COMPONENTS[id];
-    writer.setTemporaryRoot(config.CONTENT_COMPONENTS_TEMPLATES_DIR);
-    writer.render(contentComponent.type + ".html", contentComponent.vars || {}, function (err, data) {
+    contentComponentTemplateWriter.render(contentComponent.type + ".html", contentComponent.vars || {}, function (err, data) {
         if (err) {
             console.log("Error rendering Content Component template:", err);
             // "Internal Server Error"
