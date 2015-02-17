@@ -21,23 +21,31 @@ if (config.DEVELOPMENT) {
     console.log("Using mu cache");
 }
 
-/**
- * Set a different root temporarily, or reset the root to its default.
- * If a new temporary root is set, it will be reset back to the default after
- * the next writer.* function is called.
- *
- * @param {string} [root] - The new root (or leave undefined to reset the root).
- */
-exports.setTemporaryRoot = function (root) {
-    if (root) {
-        mu.root = root;
-    } else {
-        mu.root = config.TEMPLATES_DIR;
-    }
-};
 
-// Set the default templates directory now
-exports.setTemporaryRoot();
+// By default, use the normal config.TEMPLATES_DIR
+module.exports = new Writer(config.TEMPLATES_DIR);
+// But, still give the ability to create other Writers for other template dirs
+module.exports.Writer = Writer;
+
+
+/**
+ * A writer for writing templates from a directory.
+ *
+ * @param {string} [root] - The root of the templates.
+ * @param {string} [errorRoot=root] - The root for error message templates.
+ * @param {string} [errorTemplateName="error.html"] - The name of the generic
+ *        error message template.
+ * @param {Object.<number, string>} [errorTemplateNamesByStatus] - The names of
+ *        error message templates for certain HTTP error messages. If an HTTP
+ *        error doesn't have a corresponding template name here, it uses the
+ *        generic errorTemplateName above.
+ */
+function Writer(root, errorRoot, errorTemplateName, errorTemplateNamesByStatus) {
+    this.root = root || "";
+    this.errorRoot = errorRoot || root;
+    this.errorTemplateName = errorTemplateName || "error.html";
+    this.errorTemplateNamesByStatus = errorTemplateNamesByStatus || {};
+}
 
 /**
  * Render a template and get its contents.
@@ -48,11 +56,14 @@ exports.setTemporaryRoot();
  *                   The error (if any), and
  *                   The data.
  */
-exports.render = function (template, vars, callback) {
+Writer.prototype.render = function (template, vars, callback) {
+    // Set up mu
     if (config.DEVELOPMENT) {
         mu.clearCache();
     }
-    var stream = mu.compileAndRender(template, vars);
+    
+    // Render the template
+    var stream = mu.compileAndRender(path.join(this.root, template), vars);
     var data = "";
     stream.on("data", function (chunk) {
         data += chunk;
@@ -63,9 +74,6 @@ exports.render = function (template, vars, callback) {
     stream.on("end", function () {
         callback(null, data);
     });
-    
-    // Reset any possible temporary root that might have existed
-    exports.setTemporaryRoot();
 };
 
 /**
@@ -78,36 +86,37 @@ exports.render = function (template, vars, callback) {
  * @param {number} [status=200] - HTTP status.
  * @param {object} [headers={}] - Any HTTP headers to send.
  */
-exports.write = function (res, template, vars, status, headers) {
+Writer.prototype.write = function (res, template, vars, status, headers) {
+    if (typeof res != "object" || !res) throw "Invalid res.";
+    if (typeof template != "string" || !template) throw "Invalid template.";
+    
+    // Make sure variables are good
     if (status && typeof status == "object") {
         headers = status;
         status = null;
     }
-    
     if (!headers || typeof headers != "object") headers = {};
     if (!headers["Content-Type"]) headers["Content-Type"] = "text/html";
     if (!headers["Cache-Control"]) headers["Cache-Control"] = "no-cache";
-    res.writeHead(status || 200, headers);
     
-    if (config.DEVELOPMENT) {
-        mu.clearCache();
-    }
-    mu.compileAndRender(template, vars || {}).pipe(res);
-    
-    // Reset any possible temporary root that might have existed
-    exports.setTemporaryRoot();
+    // Write the template to the stream
+    writeToStream(res, path.join(this.root, template), vars, status, headers);
 };
 
 /**
  * Write an error page to an output stream.
  *
  * @param res - The Express response object.
- * @param {number} num - The HTTP error number.
+ * @param {number} status - The HTTP error number.
  * @param {string} [details] - Details about the error.
  */
-exports.writeError = function (res, num, details) {
+Writer.prototype.writeError = function (res, status, details) {
+    if (typeof res != "object" || !res) throw "Invalid res.";
+    if (typeof status != "number" || !status) throw "Invalid HTTP status.";
+    
+    // Set up template variables
     var httpError = "";
-    switch (num) {
+    switch (status) {
         case 400:
             httpError = "Bad Request";
             break;
@@ -127,11 +136,35 @@ exports.writeError = function (res, num, details) {
             httpError = "Internal Server Error";
             break;
     }
-    exports.write(res, "error.html", {
-        num: num,
+    
+    var templateName = this.errorTemplateNamesByStatus[status] || this.errorTemplateName;
+    writeToStream(res, path.join(this.errorRoot, templateName), {
+        num: status,
         httpError: httpError,
         details: details
-    }, num);
-    
-    // Any possible temporary root that might have existed will be reset in exports.write.
+    }, status, {
+        "Content-Type": "text/html",
+        "Cache-Control": "no-cache"
+    });
 };
+
+
+/**
+ * Write a template to an output stream.
+ *
+ * @param res - The Express response object.
+ * @param {string} templatePath - The full path to the template.
+ * @param {object} vars - The variables for the template.
+ * @param {number} status - The HTTP status.
+ * @param {object} headers - The HTTP headers.
+ */
+function writeToStream(res, templatePath, vars, status, headers) {
+    // Set up mu
+    if (config.DEVELOPMENT) {
+        mu.clearCache();
+    }
+    // Write the status and headers
+    res.writeHead(status || 200, headers || {});
+    // Render the template
+    mu.compileAndRender(templatePath, vars || {}).pipe(res);
+}
