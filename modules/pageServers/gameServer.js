@@ -70,8 +70,7 @@ router.get("/:id", function (req, res) {
             
         // NOTE: The following are written to JS variables!
         "js-socket-io-location": (config.SOCKET_IO_ORIGIN ? "" : "window.location.origin + ") + JSON.stringify(config.SOCKET_IO_ORIGIN + "/content"),
-        "js-game-id": JSON.stringify(req.params.id),
-        "js-game-content-components": JSON.stringify(TEST_GAMES[req.params.id])
+        "js-game-id": JSON.stringify(req.params.id)
     });
 });
 

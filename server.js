@@ -22,7 +22,6 @@ var config = require("./config"),
  * values are the Express paths.
  */
 var HTTP_SERVERS = {
-    "contentServer": "/content",
     "gameServer": "/game",
     // This one catches everything else
     "homepageServer": "/"
