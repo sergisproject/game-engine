@@ -33,7 +33,7 @@
 <script type="text/javascript" src="{{socket-io-src}}"></script>
 
 <!-- ES6 Promise polyfill -->
-<script type="text/javascript" src="/static/es6-promise-2.0.0.min.js"></script>
+<script type="text/javascript" src="/static/lib/es6-promise-2.0.0.min.js"></script>
 
 <!--
   **********************
@@ -41,19 +41,15 @@
   **********************
 -->
 
-<!-- SerGIS Game Engine - common library -->
-<script type="text/javascript" src="/static/common.js"></script>
+<!-- SerGIS Game Engine - Game State Renderer library -->
+<script type="text/javascript" src="/static/game.js"></script>
 
 <script type="text/javascript">
 sergis.socketLocation = {{{js-socket-io-location}}};
 sergis.game = {
-    id: {{{js-game-id}}},
-    contentComponents: {{{js-game-content-components}}}
+    id: {{{js-game-id}}}
 };
 </script>
-
-<!-- SerGIS Game Engine - Game State Renderer library -->
-<script type="text/javascript" src="/static/game.js"></script>
 
 </body>
 </html>
