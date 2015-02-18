@@ -15,46 +15,10 @@ var router = require("express").Router();
 var config = require("../../config"),
     writer = require("../../modules/writer");
 
-
-
-////////////////////////////////////////////////////////////////////////////////
-var TEST_GAMES = {
-    "testgame": [
-        {
-            css: {
-                left: "0",
-                top: "0",
-                width: "100%",
-                height: "100px"
-            },
-            content_id: 1
-        },
-        
-        {
-            css: {
-                left: "0",
-                top: "100px",
-                width: "50%",
-                height: "calc(100% - 100px)"
-            },
-            content_id: 2
-        },
-        
-        {
-            css: {
-                right: "0",
-                top: "100px",
-                width: "50%",
-                height: "calc(100% - 100px)"
-            },
-            content_id: 3
-        }
-    ]
-};
-////////////////////////////////////////////////////////////////////////////////
-
-
-
+// test games module
+var TEST_GAMES = require("../../TEST_GAMES");
+// test content components module
+var TEST_CONTENT_COMPONENTS = require("../../TEST_CONTENT_COMPONENTS");
 
 
 // Handler for GET requests to /game/GAME NAME HERE

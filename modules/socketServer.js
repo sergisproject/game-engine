@@ -12,102 +12,87 @@ var fs = require("fs"),
 var config = require("../config"),
     writer = require("./writer.js");
 
+// test games module
+var TEST_GAMES = require("../TEST_GAMES");
+// test content components module
+var TEST_CONTENT_COMPONENTS = require("../TEST_CONTENT_COMPONENTS");
 
-
-
-////////////////////////////////////////////////////////////////////////////////
-var TEST_CONTENT_COMPONENTS = {
-    /*
-    id: {
-        type: "Content Component type here",
-        data: {
-            // Content Component data here
-        },
-        vars: {
-            // Content Component template vars here
-        }
-    }
-    */
-    
-    1: {
-        type: "basic-html",
-        data: {},
-        vars: {
-            html: "<strong><i>SOME</i> HTML</strong>",
-            js: 'document.body.style.backgroundColor = "rgb(" + Math.floor(Math.random()*255) + "," + Math.floor(Math.random()*255) + "," + Math.floor(Math.random()*255) + ")";'
-        }
-    },
-    
-    2: {
-        type: "basic-html",
-        data: {},
-        vars: {
-            html: "<strong><i>SOME</i> HTML</strong> #2",
-            js: 'document.body.style.backgroundColor = "rgb(" + Math.floor(Math.random()*255) + "," + Math.floor(Math.random()*255) + "," + Math.floor(Math.random()*255) + ")";'
-        }
-    },
-    
-    3: {
-        type: "basic-html",
-        data: {},
-        vars: {
-            html: "<strong><i>SOME</i> HTML</strong> #3",
-            js: 'document.body.style.backgroundColor = "rgb(" + Math.floor(Math.random()*255) + "," + Math.floor(Math.random()*255) + "," + Math.floor(Math.random()*255) + ")";'
-        }
-    },
-    
-    4: {
-        type: "map",
-        data: {
-            map: {
-                latitude: 0,
-                longitude: 0,
-                zoom: 5,
-                basemap: "",
-                layers: []
-            }
-        },
-        vars: {},
-        cssDependencies: [
-            "http://js.arcgis.com/3.11/esri/css/esri.css"
-        ],
-        jsDependencies: [
-            "http://js.arcgis.com/3.11/"
-        ]
-    },
-    
-    5: {
-        type: "dialog",
-        data: {},
-        vars: {}
-    }
-};
-////////////////////////////////////////////////////////////////////////////////
-
-
-
-
-// The "/game" socket
-var gameSocket;
 
 exports.init = function (io) {
-    // Initialize "/game" socket
+    // Initialize the handler for connections to the "/game" socket
+    // This is called each time a new connection is made to the "/game" socket
     io.of("/game").on("connection", function (socket) {
-        gameSocket = socket;
+        // Data associated with this specific socket connection
+        var socketData = {
+            userVars: {}
+        };
         
-        gameSocket.on("getUserVar", function (name, callback) {
+        
+        /*
+        The client will send a "ready" event once it's all loaded up.
+        data: {
+            gameID: string
+            authToken: string
+        }
+        callback(error message or null, initial game state)
+        */
+        socket.on("ready", function (data, callback) {
+            // Since it's the first time, set up socketData
+            socketData.gameID = data.gameID;
+            socketData.authToken = data.authToken;
+            
+            if (!TEST_GAMES.hasOwnProperty(socketData.gameID)) {
+                // Invalid game ID!
+                callback("Invalid game ID.");
+                return;
+            }
+            
+            // TODO: Query a database of auth tokens to find data about the user corresponding to this auth token.
+            // Store this data about the user in socketData (or call `callback` with an error if it's an invalid auth token).
             // ...
+            
+            // Reply with the game state so the client can begin the game
+            callback(null, "GAME STATE HERE");
         });
-        gameSocket.on("setUserVar", function (name, value, callback) {
-            // ...
+        
+        
+        /*
+        When the client wants a user variable.
+        data: {
+            name: string
+        }
+        callback(error message or null, variable value)
+        */
+        socket.on("getUserVar", function (data, callback) {
+            if (!data || !data.name) {
+                callback("Invalid data.");
+            } else if (!socketData.userVars.hasOwnProperty(data.name)) {
+                callback("Invalid user variable name.");
+            } else {
+                callback(null, socketData.userVars[name]);
+            }
+        });
+        
+        
+        /*
+        When the client wants to set a user variable.
+        data: {
+            name: string
+            value: string
+        }
+        callback(error message or null)
+        */
+        socket.on("setUserVar", function (name, value, callback) {
+            socketData.userVars[name] = value;
+            callback(null);
         });
     });
 };
 
 
+///////////////////////////////////////////////////////////////////////////////
 // Writer for Content Component templates
 var contentComponentTemplateWriter = new writer.Writer(config.CONTENT_COMPONENTS_TEMPLATES_DIR);
-
 
 function getContentComponent(id, callback) {
     id = Number(id);

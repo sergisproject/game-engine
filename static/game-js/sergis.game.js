@@ -29,7 +29,9 @@ sergis.game = {
      */
     sergis.game.getUserVar = function (name) {
         return new Promise(function (resolve, reject) {
-            sergis.socket.emit("getUserVar", name, function (err, value) {
+            sergis.socket.emit("getUserVar", {
+                name: name
+            }, function (err, value) {
                 if (err) {
                     reject(err);
                 } else {
@@ -50,7 +52,10 @@ sergis.game = {
      */
     sergis.game.setUserVar = function (name, value) {
         return new Promise(function (resolve, reject) {
-            sergis.socket.emit("setUserVar", name, value, function (err) {
+            sergis.socket.emit("setUserVar", {
+                name: name,
+                value: value
+            }, function (err) {
                 if (err) {
                     reject(err);
                 } else {
@@ -84,5 +89,15 @@ sergis.game = {
      */
     function startGame() {
         alert("Starting game " + gameID + "!\nAuth token: " + authToken);
+        sergis.socket.emit("ready", {
+            gameID: gameID,
+            authToken: authToken
+        }, function (err, gameState) {
+            if (err) {
+                alert("ERROR FROM SERVER: " + err);
+            } else {
+                alert("Response from server: " + gameState);
+            }
+        });
     }
 })();
