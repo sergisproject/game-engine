@@ -5,11 +5,15 @@
 */
 
 var sergis = {
-    // socket
-    // error()
-    // addLoadHandler()
-    // getUserVar()
-    // setUserVar()
+    // Set here:
+    //socket
+    //error()
+    //addLoadHandler()
+    //getUserVar()
+    //setUserVar()
+    
+    // Set in other files:
+    //game.*
 };
 
 // Use Promise polyfill if needed
@@ -77,47 +81,6 @@ if (typeof console.error != "function") console.error = console.log;
         // Now, tell the server that we're ready
         sergis.socket.emit("contentLoaded");
     }
-    
-    /**
-     * Get the value of a variable that is part of the User State.
-     *
-     * @param {string} name - The name of the variable.
-     *
-     * @return {Promise} The value of the variable (could be any
-     * JSON-encodable type).
-     */
-    sergis.getUserVar = function (name) {
-        return new Promise(function (resolve, reject) {
-            socket.emit("getUserVar", name, function (err, value) {
-                if (err) {
-                    reject(err);
-                } else {
-                    resolve(value);
-                }
-            });
-        });
-    };
-    
-    /**
-     * Set the value of a variable that is part of the User State.
-     *
-     * @param {string} name - The name of the variable.
-     * @param value - The value of the variable (can be any JSON-encodable
-     *        type).
-     *
-     * @return {Promise} Resolved if the variable was saved successfully.
-     */
-    sergis.setUserVar = function (name, value) {
-        return new Promise(function (resolve, reject) {
-            socket.emit("setUserVar", name, value, function (err) {
-                if (err) {
-                    reject(err);
-                } else {
-                    resolve();
-                }
-            });
-        });
-    };
     
     /** Window load handler */
     function init() {

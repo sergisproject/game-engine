@@ -9,7 +9,8 @@ var fs = require("fs"),
     path = require("path");
 
 // our modules
-var config = require("../config");
+var config = require("../config"),
+    writer = require("./writer.js");
 
 
 

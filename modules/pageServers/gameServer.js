@@ -69,8 +69,9 @@ router.get("/:id", function (req, res) {
         "socket-io-src": config.SOCKET_IO_ORIGIN + "/socket.io/socket.io.js",
             
         // NOTE: The following are written to JS variables!
-        "js-socket-io-location": (config.SOCKET_IO_ORIGIN ? "" : "window.location.origin + ") + JSON.stringify(config.SOCKET_IO_ORIGIN + "/content"),
-        "js-game-id": JSON.stringify(req.params.id)
+        "js-socket-io-location": (config.SOCKET_IO_ORIGIN ? "" : "window.location.origin + ") + JSON.stringify(config.SOCKET_IO_ORIGIN + "/game"),
+        "js-game-id": JSON.stringify(req.params.id),
+        "js-auth-token": JSON.stringify("AUTH TOKEN HERE!")
     });
 });
 
