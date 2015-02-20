@@ -5,7 +5,7 @@
 */
 
 var path = require("path");
-var config = {};
+var config = module.exports = {};
 
 /** Whether we're in development mode */
 //config.DEVELOPMENT = process.env.NODE_ENV && process.env.NODE_ENV.toLowerCase() == "development";
@@ -40,6 +40,3 @@ config.ENABLE_SOCKET_SERVER = true;
  * set this to the empty string.
  */
 config.SOCKET_IO_ORIGIN = "";
-
-
-module.exports = config;
