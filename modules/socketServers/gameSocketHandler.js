@@ -12,10 +12,14 @@ var fs = require("fs"),
 var config = require("../../config"),
     writer = require("../writer.js");
 
-// test games module
-var TEST_GAMES = require("../../TEST_GAMES");
+// test auth tokens module
+var TEST_AUTH_TOKENS = require("../../TEST_AUTH_TOKENS");
 // test content components module
 var TEST_CONTENT_COMPONENTS = require("../../TEST_CONTENT_COMPONENTS");
+// test games module
+var TEST_GAMES = require("../../TEST_GAMES");
+// test users module
+var TEST_USERS = require("../../TEST_USERS");
 
 
 /**
@@ -27,12 +31,6 @@ var TEST_CONTENT_COMPONENTS = require("../../TEST_CONTENT_COMPONENTS");
  *        socket on our end.
  */
 module.exports = function (socket, next) {
-    // Data associated with this specific socket connection
-    var socketData = {
-        userVars: {}
-    };
-
-
     /*
     The client will send a "ready" event once it's all loaded up.
     data: {
@@ -42,57 +40,31 @@ module.exports = function (socket, next) {
     callback(error message or null, initial game state)
     */
     socket.on("ready", function (data, callback) {
-        // Since it's the first time, set up socketData
-        socketData.gameID = data.gameID;
-        socketData.authToken = data.authToken;
+        var gameID = data.gameID,
+            authToken = data.authToken;
 
-        if (!TEST_GAMES.hasOwnProperty(socketData.gameID)) {
+        // Check auth token
+        if (!TEST_AUTH_TOKENS.hasOwnProperty(authToken)) {
+            // Invalid auth token!
+            callback("Invalid auth token.");
+            return;
+        }
+        
+        // Get user from auth token
+        var user = TEST_USERS[TEST_AUTH_TOKENS[authToken].userID];
+        
+        // Check game ID
+        if (!TEST_GAMES.hasOwnProperty(gameID)) {
             // Invalid game ID!
             callback("Invalid game ID.");
             return;
-        } else {
-            // Store the game data for easy access
-            socketData.game = TEST_GAMES[socketData.gameID];
         }
-
-        // TODO: Query a database of auth tokens to find data about the user corresponding to this auth token.
-        // Store this data about the user in socketData (or call `callback` with an error if it's an invalid auth token).
-        // ...
-
-        // Reply with the game state so the client can begin the game
-        callback(null, socketData.game.gameStates[socketData.game.initialGameState].contentComponents);
-    });
-
-
-    /*
-    When the client wants a user variable.
-    data: {
-        name: string
-    }
-    callback(error message or null, variable value)
-    */
-    socket.on("getUserVar", function (data, callback) {
-        if (!data || !data.name) {
-            callback("Invalid data.");
-        } else if (!socketData.userVars.hasOwnProperty(data.name)) {
-            callback("Invalid user variable name.");
-        } else {
-            callback(null, socketData.userVars[name]);
-        }
-    });
-
-
-    /*
-    When the client wants to set a user variable.
-    data: {
-        name: string
-        value: string
-    }
-    callback(error message or null)
-    */
-    socket.on("setUserVar", function (name, value, callback) {
-        socketData.userVars[name] = value;
-        callback(null);
+        
+        // Get game from game ID
+        var game = TEST_GAMES[gameID];
+        
+        // All is good; make GameSocket
+        new GameSocket(socket, game, user, callback);
     });
     
     // Everything's initialized for us; move on!
@@ -126,3 +98,84 @@ function getContentComponent(id, callback) {
         callback(null, data);
     });
 }
+
+
+
+// Documentation for the callback functions to send a reply back to the client:
+/**
+ * A callback function to call in reply to an event sent by the client.
+ * @callback GameSocket~requestCallback
+ * @param {?string} err - An error message, or null if there was no error.
+ * @param {*} [response] - Response data, if there was no error.
+ */
+
+
+/**
+ * Class representing a socket connection with a specific game and user.
+ * @class
+ * @constructor
+ *
+ * @param socket - The Socket.IO socket connection to the client.
+ * @param {object} game - The game data from the database.
+ * @param {object} user - The user data from the database.
+ * @param {GameSocket~requestCallback} initialCallback - The callback to give
+ *        the client the initial game state.
+ */
+function GameSocket(socket, game, user, initialCallback) {
+    this.socket = socket;
+    this.game = game;
+    this.user = user;
+    
+    // Check user object
+    if (!this.user.games) this.user.games = {};
+    if (!this.user.games[this.game.name]) this.user.games[this.game.name] = {};
+    
+    // Make shortcut for user.games[game.name]
+    this.userGame = this.user.games[this.game.name];
+    
+    // Check userGame.userVars
+    if (!this.userGame.userVars) this.userGame.userVars = {};
+    
+    // Check userGame.currentGameStateIndex
+    if (typeof this.userGame.currentGameStateIndex != "number") {
+        this.userGame.currentGameStateIndex = this.game.initialGameStateIndex;
+    }
+    
+    // Set up socket handlers
+    this.socket.on("getUserVar", this.handler_getUserVar.bind(this));
+    this.socket.on("setUserVar", this.handler_setUserVar.bind(this));
+    
+    // Get dat client started
+    initialCallback(null, this.game.gameStates[this.userGame.currentGameStateIndex].contentComponents);
+}
+
+/**
+ * Handler for client socket "getUserVariable" event.
+ * Called by the client to get the value of a user variable.
+ *
+ * @param {object} data - name (stirng): the name of the variable to get.
+ * @param {GameSocket~requestCallback} callback
+ */
+GameSocket.prototype.handler_getUserVar = function (data, callback) {
+    if (!data || !data.name) {
+        callback("Invalid data.");
+    } else if (!this.userGame.userVars.hasOwnProperty(data.name)) {
+        callback("Invalid user variable name.");
+    } else {
+        callback(null, this.userGame.userVars[name]);
+    }
+};
+
+/**
+ * Handler for client socket "setUserVariable" event.
+ * Called by the client to set a user variable.
+ *
+ * @param {object} data - name (string): the name of the variable to set.
+ *                        value (string): the value of the variable to set.
+ * @param {GameSocket~requestCallback} callback
+ */
+GameSocket.prototype.handler_setUserVar = function (data, callback) {
+    this.userGame.userVars[data.name] = data.value;
+    callback(null);
+};
+

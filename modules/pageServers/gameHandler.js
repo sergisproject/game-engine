@@ -15,10 +15,14 @@ var router = require("express").Router();
 var config = require("../../config"),
     writer = require("../../modules/writer");
 
-// test games module
-var TEST_GAMES = require("../../TEST_GAMES");
+// test auth tokens module
+var TEST_AUTH_TOKENS = require("../../TEST_AUTH_TOKENS");
 // test content components module
 var TEST_CONTENT_COMPONENTS = require("../../TEST_CONTENT_COMPONENTS");
+// test games module
+var TEST_GAMES = require("../../TEST_GAMES");
+// test users module
+var TEST_USERS = require("../../TEST_USERS");
 
 
 // Handler for GET requests to /game/GAME NAME HERE
@@ -35,7 +39,7 @@ router.get("/:id", function (req, res) {
         // NOTE: The following are written to JS variables!
         "js-socket-io-location": (config.SOCKET_IO_ORIGIN ? "" : "window.location.origin + ") + JSON.stringify(config.SOCKET_IO_ORIGIN + "/game"),
         "js-game-id": JSON.stringify(req.params.id),
-        "js-auth-token": JSON.stringify("AUTH TOKEN HERE!")
+        "js-auth-token": JSON.stringify("auth_token_3")
     });
 });
 

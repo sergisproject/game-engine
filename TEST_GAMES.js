@@ -2,9 +2,14 @@
 module.exports = {
     // Game name
     "testgame": {
+        // The name of the game (again)
+        // (This is quite repetitive when stored in this way, but when using a
+        // database in the future, it should be stored in a property like this)
+        name: "testgame",
+        
         // The initial game state that the user starts in
         // (corresponds to an index in the `gameStates` array)
-        initialGameState: 0,
+        initialGameStateIndex: 0,
         
         // The game states for this game
         gameStates: [
