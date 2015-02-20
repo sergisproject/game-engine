@@ -85,6 +85,7 @@ if (typeof console.error != "function") console.error = console.log;
     /** Window load handler */
     function init() {
         // Load socket.io
+        console.log("Loading socket...");
         sergis.socket = io.connect(sergis.socketLocation);
         sergis.socket.on("connecting", function () {
             console.log("Connecting to socket server...");
