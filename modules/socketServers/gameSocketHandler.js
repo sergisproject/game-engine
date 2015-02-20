@@ -150,10 +150,10 @@ function GameSocket(socket, game, user, initialCallback) {
 }
 
 /**
- * Handler for client socket "getUserVariable" event.
+ * Handler for client socket "getUserVar" event.
  * Called by the client to get the value of a user variable.
  *
- * @param {object} data - name (stirng): the name of the variable to get.
+ * @param {object} data - name (string): the name of the variable to get.
  * @param {GameSocket~requestCallback} callback
  */
 GameSocket.prototype.handler_getUserVar = function (data, callback) {
@@ -167,7 +167,7 @@ GameSocket.prototype.handler_getUserVar = function (data, callback) {
 };
 
 /**
- * Handler for client socket "setUserVariable" event.
+ * Handler for client socket "setUserVar" event.
  * Called by the client to set a user variable.
  *
  * @param {object} data - name (string): the name of the variable to set.
