@@ -50,6 +50,9 @@ module.exports = function (socket, next) {
             // Invalid game ID!
             callback("Invalid game ID.");
             return;
+        } else {
+            // Store the game data for easy access
+            socketData.game = TEST_GAMES[socketData.gameID];
         }
 
         // TODO: Query a database of auth tokens to find data about the user corresponding to this auth token.
@@ -57,7 +60,7 @@ module.exports = function (socket, next) {
         // ...
 
         // Reply with the game state so the client can begin the game
-        callback(null, "GAME STATE HERE");
+        callback(null, socketData.game.gameStates[socketData.game.initialGameState].contentComponents);
     });
 
 

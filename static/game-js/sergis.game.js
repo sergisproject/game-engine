@@ -92,11 +92,11 @@ sergis.game = {
         sergis.socket.emit("ready", {
             gameID: gameID,
             authToken: authToken
-        }, function (err, gameState) {
+        }, function (err, contentComponents) {
             if (err) {
                 alert("ERROR FROM SERVER: " + err);
             } else {
-                alert("Response from server: " + gameState);
+                alert("JSON Response from server: " + JSON.stringify(contentComponents));
             }
         });
     }
