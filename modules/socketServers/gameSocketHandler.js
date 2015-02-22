@@ -142,7 +142,9 @@ function GameSocket(socket, game, user, initialCallback) {
     
     // Set up socket handlers (getUserVar, setUserVar)
     for (var eventName in GameSocket.handlers) {
-        this.socket.on(eventName, GameSocket.handlers[eventName].bind(this));
+        if (GameSocket.handlers.hasOwnProperty(eventName)) {
+            this.socket.on(eventName, GameSocket.handlers[eventName].bind(this));
+        }
     }
     
     // Get dat client started
