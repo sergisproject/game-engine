@@ -113,7 +113,6 @@ function getContentComponent(id, callback) {
 /**
  * Class representing a socket connection with a specific game and user.
  * @class
- * @constructor
  *
  * @param socket - The Socket.IO socket connection to the client.
  * @param {object} game - The game data from the database.
@@ -141,41 +140,54 @@ function GameSocket(socket, game, user, initialCallback) {
         this.userGame.currentGameStateIndex = this.game.initialGameStateIndex;
     }
     
-    // Set up socket handlers
-    this.socket.on("getUserVar", this.handler_getUserVar.bind(this));
-    this.socket.on("setUserVar", this.handler_setUserVar.bind(this));
+    // Set up socket handlers (getUserVar, setUserVar)
+    for (var eventName in GameSocket.handlers) {
+        this.socket.on(eventName, GameSocket.handlers[eventName].bind(this));
+    }
     
     // Get dat client started
     initialCallback(null, this.game.gameStates[this.userGame.currentGameStateIndex].contentComponents);
 }
 
 /**
- * Handler for client socket "getUserVar" event.
- * Called by the client to get the value of a user variable.
+ * Handlers for client socket events.
+ * Each is called with 2 parameters: `data` and `callback` (both specified by
+ * the client).
+ * The `this` value in each function when it is called is the current GameSocket
+ * instance.
  *
- * @param {object} data - name (string): the name of the variable to get.
- * @param {GameSocket~requestCallback} callback
+ * @type Array.<Function>
  */
-GameSocket.prototype.handler_getUserVar = function (data, callback) {
-    if (!data || !data.name) {
-        callback("Invalid data.");
-    } else if (!this.userGame.userVars.hasOwnProperty(data.name)) {
-        callback("Invalid user variable name.");
-    } else {
-        callback(null, this.userGame.userVars[name]);
+GameSocket.handlers = {
+    /**
+     * Handler for client socket "getUserVar" event.
+     * Called by the client to get the value of a user variable.
+     *
+     * @this GameSocket
+     * @param {object} data - name (string): the name of the variable to get.
+     * @param {GameSocket~requestCallback} callback
+     */
+    getUserVar: function (data, callback) {
+        if (!data || !data.name) {
+            callback("Invalid data.");
+        } else if (!this.userGame.userVars.hasOwnProperty(data.name)) {
+            callback("Invalid user variable name.");
+        } else {
+            callback(null, this.userGame.userVars[name]);
+        }
+    },
+
+    /**
+     * Handler for client socket "setUserVar" event.
+     * Called by the client to set a user variable.
+     *
+     * @this GameSocket
+     * @param {object} data - name (string): the name of the variable to set.
+     *                        value (string): the value of the variable to set.
+     * @param {GameSocket~requestCallback} callback
+     */
+    setUserVar: function (data, callback) {
+        this.userGame.userVars[data.name] = data.value;
+        callback(null);
     }
 };
-
-/**
- * Handler for client socket "setUserVar" event.
- * Called by the client to set a user variable.
- *
- * @param {object} data - name (string): the name of the variable to set.
- *                        value (string): the value of the variable to set.
- * @param {GameSocket~requestCallback} callback
- */
-GameSocket.prototype.handler_setUserVar = function (data, callback) {
-    this.userGame.userVars[data.name] = data.value;
-    callback(null);
-};
-
