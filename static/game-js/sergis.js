@@ -9,8 +9,6 @@ var sergis = {
     //socket
     //error()
     //addLoadHandler()
-    //getUserVar()
-    //setUserVar()
     
     // Set in other files:
     //game.*
