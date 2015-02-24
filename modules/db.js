@@ -15,11 +15,24 @@ var mongoose = require("mongoose");
 var config = require("../config");
 
 
-// Functions to call when the database is loaded
+/** Functions to call when the database is loaded */
 var loadHandlers = [];
 
+/** Models */
+var models = exports.models = {};
+
+/** Models directory */
+var modelsDir = path.join(__dirname, "models");
+
+
 // Connect to the MongoDB server
-mongoose.connect(config.MONGODB_SERVER);
+mongoose.connect(config.MONGODB_SERVER, {
+    server: {
+        keepAlive: 1,
+        auto_reconnect: true
+    }
+});
+
 var db = mongoose.connection;
 
 db.on("error", function (err) {
@@ -28,14 +41,43 @@ db.on("error", function (err) {
 
 db.once("open", function () {
     console.log("Opened MongoDB connection.");
-    // TODO: Load schemas and models
     
-    // Run load handlers
-    for (var i = 0; i < loadHandlers.length; i++) {
-        loadHandlers[i]();
-    }
-    // No more load handlers allowed
-    loadHandlers = null;
+    // Load models from `models` directory
+    fs.readdir(modelsDir, function (err, files) {
+        if (err) {
+            console.error("Error reading files from models directory at " + modelsDir + ": ", err);
+            return;
+        }
+        
+        // Load all the models
+        try {
+            for (var i = 0; i < files.length; i++) {
+                if (files[i].substr(-3) == ".js") {
+                    models[files[i].substring(0, files[i].length - 3)] = require(path.join(modelsDir, files[i]))(mongoose);
+                }
+            }
+        } catch (err) {
+            console.error("Error loading model: ", err.stack);
+            
+            // Make sure the MongoDB connection is closed
+            exports.close().then(function () {
+                process.exit();
+            }, function (err) {
+                console.error("Error closing database: ", err.stack);
+                process.exit();
+            });
+            
+            // And, we're done here
+            return;
+        }
+        
+        // Run load handlers
+        for (var i = 0; i < loadHandlers.length; i++) {
+            loadHandlers[i]();
+        }
+        // No more load handlers allowed
+        loadHandlers = null;
+    });
 });
 
 

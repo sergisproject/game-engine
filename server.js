@@ -87,6 +87,13 @@ if (config.ENABLE_HTTP_SERVER || config.ENABLE_SOCKET_SERVER) {
     process.on("SIGTERM", runExitHandlers.bind(this, "caught SIGTERM"));
     process.on("SIGHUP", runExitHandlers.bind(this, "caught SIGHUP"));
     
+    // Catch uncaught exceptions
+    process.on("uncaughtException", function (err) {
+        console.log("");
+        console.error("UNCAUGHT EXCEPTION: ", err.stack);
+        runExitHandlers();
+    });
+    
     // Set up database
     initDB();
 } else {
