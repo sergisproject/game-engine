@@ -14,6 +14,9 @@ config.DEVELOPMENT = true;
 /** HTTP server port */
 config.PORT = process.env.PORT || 3000;
 
+/** MongoDB server URI */
+config.MONGODB_SERVER = "mongodb://localhost/sergis-game-test";
+
 /** Templates directory */
 config.TEMPLATES_DIR = path.join(__dirname, "templates");
 

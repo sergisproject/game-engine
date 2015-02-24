@@ -12,8 +12,8 @@ var fs = require("fs"),
 // NOTE: express, http, and socket.io are require'd below if needed.
 
 // our modules
-var config = require("./config"),
-    exitHandler = require("./modules/exitHandler");
+var config = require("./config");
+// NOTE: ./modules/db is require'd below if needed.
 
 
 /**
@@ -38,10 +38,82 @@ var SOCKET_SERVERS = {
 };
 
 
-///////////////////////////////////////////////////////////////////////////////
-// Start HTTP server (if enabled)
-var app, server;
-(function () {
+/**
+ * Functions to call right before exiting. Each function must return a Promise
+ * that will be resolved when it is done cleaning up.
+ * @type Array.<Function>
+ */
+var exitHandlers = [];
+
+/**
+ * Run all the exit handlers.
+ *
+ * @param {string} reason - The reason that we're exiting.
+ *
+ * @return {Promise} Resolved when all the exit handlers have run; rejected if
+ *         an error has occurred.
+ */
+function runExitHandlers(reason) {
+    console.log("");
+    console.log("Running exit handlers" + (reason ? " (" + reason + ")" : "") + "...");
+    var promises = [];
+    // Start from the end and run each exit handler
+    while (exitHandlers.length) {
+        promises.push(exitHandlers.pop()());
+    }
+    Promise.all(promises).then(function () {
+        console.log("Exiting server...");
+        process.exit();
+    }, function (err) {
+        console.log("Error running exit handler: ", err);
+    }).catch(function (err) {
+        console.log("Error running exit handlers: ", err);
+    });
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
+
+// Make sure we're starting something and, if so, set up exit handling and init
+if (config.ENABLE_HTTP_SERVER || config.ENABLE_SOCKET_SERVER) {
+    // So that the server will not close instantly when Ctrl+C is pressed, etc.
+    process.stdin.resume();
+
+    // Catch app closing
+    process.on("beforeExit", runExitHandlers);
+
+    // Catch exit signals (NOTE: Ctrl+C == SIGINT)
+    process.on("SIGINT", runExitHandlers.bind(this, "caught SIGINT"));
+    process.on("SIGTERM", runExitHandlers.bind(this, "caught SIGTERM"));
+    process.on("SIGHUP", runExitHandlers.bind(this, "caught SIGHUP"));
+    
+    // Set up database
+    initDB();
+} else {
+    // Nope, we didn't actually do anything.
+    console.error("Neither HTTP nor socket server enabled!");
+}
+
+
+/** Set up the database, then, if successful, call `init()`. */
+function initDB() {
+    var db = require("./modules/db");
+    db.addLoadHandler(function () {
+        // Set up exit handler for database
+        exitHandlers.push(function () {
+            return db.close();
+        });
+        
+        // Initialize the rest of the server
+        init();
+    });
+}
+
+
+var app, server, io;
+/** Set up the HTTP and/or socket server. */
+function init() {
+    // Start HTTP server (if enabled)
     if (config.ENABLE_HTTP_SERVER) {
         console.log("Starting SerGIS Game Engine HTTP server on port " + config.PORT);
 
@@ -66,12 +138,8 @@ var app, server;
             }
         }
     }
-})();
 
-////////////////////////////////////////////////////////////////////////////////
-// Start socket server (if enabled)
-var io;
-(function () {
+    // Start socket server (if enabled)
     if (config.ENABLE_SOCKET_SERVER) {
         // Check if we already have the Express HTTP server
         if (app) {
@@ -83,7 +151,7 @@ var io;
             // There's no HTTP server yet; make socket.io listen all by its lonesomes
             io = require("socket.io").listen(config.PORT);
         }
-        
+
         // Create handlers for all our socket servers (see SOCKET_SERVERS above)
         for (var pathDescrip in SOCKET_SERVERS) {
             if (SOCKET_SERVERS.hasOwnProperty(pathDescrip)) {
@@ -92,15 +160,7 @@ var io;
             }
         }
     }
-})();
-
-////////////////////////////////////////////////////////////////////////////////
-// Make sure we started something and set up process exit cleanup
-if (config.ENABLE_HTTP_SERVER || config.ENABLE_SOCKET_SERVER) {
+    
+    // Get ready for more
     console.log("");
-    // Set up cleanup
-    exitHandler.init();
-} else {
-    // Nope, we didn't actually do anything.
-    console.error("Neither HTTP nor socket server enabled!");
 }
