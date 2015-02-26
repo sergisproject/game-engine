@@ -9,7 +9,7 @@ var fs = require("fs"),
     path = require("path");
 
 // required modules
-// NOTE: express, http, and socket.io are require'd below if needed.
+// NOTE: express, cookie-parser, http, socket.io are require'd below if needed.
 
 // our modules
 var config = require("./config");
@@ -23,6 +23,7 @@ var config = require("./config");
  */
 var HTTP_SERVERS = {
     "/game": "gameHandler",
+    "/account": "accountHandler",
     // This one catches everything else
     "/": "homepageHandler"
 };
@@ -44,6 +45,29 @@ var SOCKET_SERVERS = {
  * @type Array.<Function>
  */
 var exitHandlers = [];
+
+/**
+ * Initialize the exit handlers.
+ */
+function initExitHandlers() {
+    // So that the server will not close instantly when Ctrl+C is pressed, etc.
+    process.stdin.resume();
+
+    // Catch app closing
+    process.on("beforeExit", runExitHandlers);
+
+    // Catch exit signals (NOTE: Ctrl+C == SIGINT)
+    process.on("SIGINT", runExitHandlers.bind(this, "caught SIGINT"));
+    process.on("SIGTERM", runExitHandlers.bind(this, "caught SIGTERM"));
+    process.on("SIGHUP", runExitHandlers.bind(this, "caught SIGHUP"));
+    
+    // Catch uncaught exceptions
+    process.on("uncaughtException", function (err) {
+        console.log("");
+        console.error("UNCAUGHT EXCEPTION: ", err.stack);
+        runExitHandlers();
+    });
+}
 
 /**
  * Run all the exit handlers.
@@ -76,36 +100,12 @@ function runExitHandlers(reason) {
 
 // Make sure we're starting something and, if so, set up exit handling and init
 if (config.ENABLE_HTTP_SERVER || config.ENABLE_SOCKET_SERVER) {
-    // So that the server will not close instantly when Ctrl+C is pressed, etc.
-    process.stdin.resume();
-
-    // Catch app closing
-    process.on("beforeExit", runExitHandlers);
-
-    // Catch exit signals (NOTE: Ctrl+C == SIGINT)
-    process.on("SIGINT", runExitHandlers.bind(this, "caught SIGINT"));
-    process.on("SIGTERM", runExitHandlers.bind(this, "caught SIGTERM"));
-    process.on("SIGHUP", runExitHandlers.bind(this, "caught SIGHUP"));
-    
-    // Catch uncaught exceptions
-    process.on("uncaughtException", function (err) {
-        console.log("");
-        console.error("UNCAUGHT EXCEPTION: ", err.stack);
-        runExitHandlers();
-    });
-    
     // Set up database
-    initDB();
-} else {
-    // Nope, we didn't actually do anything.
-    console.error("Neither HTTP nor socket server enabled!");
-}
-
-
-/** Set up the database, then, if successful, call `init()`. */
-function initDB() {
     var db = require("./modules/db");
     db.addLoadHandler(function () {
+        // Database is loaded; set up exit handler system
+        initExitHandlers();
+        
         // Set up exit handler for database
         exitHandlers.push(function () {
             return db.close();
@@ -114,6 +114,9 @@ function initDB() {
         // Initialize the rest of the server
         init();
     });
+} else {
+    // Nope, we didn't actually do anything.
+    console.error("Neither HTTP nor socket server enabled!");
 }
 
 
@@ -125,7 +128,9 @@ function init() {
         console.log("Starting SerGIS Game Engine HTTP server on port " + config.PORT);
 
         // Create Express server instance
-        var express = require("express");
+        var express = require("express"),
+            cookieParser = require("cookie-parser");
+        
         app = express();
         server = require("http").Server(app);
 
@@ -134,6 +139,9 @@ function init() {
 
         // Create handler for serving "/static"
         app.use("/static", express.static(config.STATIC_DIR));
+        
+        // Set up cookie processing
+        app.use(cookieParser(config.COOKIE_SIGNING_KEY || undefined));
 
         // Create handler for serving "/components-static"
         app.use("/components-static", express.static(config.CONTENT_COMPONENTS_STATIC_DIR));
