@@ -7,6 +7,7 @@
 var path = require("path");
 var config = module.exports = {};
 
+
 /** Whether we're in development mode */
 //config.DEVELOPMENT = process.env.NODE_ENV && process.env.NODE_ENV.toLowerCase() == "development";
 config.DEVELOPMENT = true;
@@ -16,18 +17,6 @@ config.PORT = process.env.PORT || 3000;
 
 /** MongoDB server URI */
 config.MONGODB_SERVER = "mongodb://localhost/sergis-game-test";
-
-/** Templates directory */
-config.TEMPLATES_DIR = path.join(__dirname, "templates");
-
-/** Static resources directory (mapped to http://this-nodejs-server/static/...) */
-config.STATIC_DIR = path.join(__dirname, "static");
-
-/** Content Components static directory */
-config.CONTENT_COMPONENTS_STATIC_DIR = path.join(__dirname, "content-components", "static");
-
-/** Content Components template directory */
-config.CONTENT_COMPONENTS_TEMPLATES_DIR = path.join(__dirname, "content-components", "templates");
 
 /** Whether to start the HTTP server */
 config.ENABLE_HTTP_SERVER = true;
@@ -43,3 +32,28 @@ config.ENABLE_SOCKET_SERVER = true;
  * set this to the empty string.
  */
 config.SOCKET_IO_ORIGIN = "";
+
+
+////////////////////////////////////////////////////////////////////////////////
+// Directories
+
+
+/** Templates directory */
+config.TEMPLATES_DIR = path.join(__dirname, "templates");
+
+/** Static resources directory (mapped to http://this-nodejs-server/static/...) */
+config.STATIC_DIR = path.join(__dirname, "static");
+
+/** Content Components static directory */
+config.CONTENT_COMPONENTS_STATIC_DIR = path.join(__dirname, "content-components", "static");
+
+/** Content Components template directory */
+config.CONTENT_COMPONENTS_TEMPLATES_DIR = path.join(__dirname, "content-components", "templates");
+
+
+////////////////////////////////////////////////////////////////////////////////
+// Misc.
+
+/** Cookie signing key (if not specified, cookies are not signed) */
+config.COOKIE_SIGNING_KEY = "testsigner";
+
