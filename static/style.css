@@ -457,10 +457,10 @@ a:hover {
 
 h1.title {
   margin: 30px 20px 10px;
-  font-size: 60px;
+  font-size: 40px;
   font-weight: bold;
   font-style: italic;
-  font-family:Georgia, serif;
+  font-family: Georgia, serif;
   text-align: center;
 }
 
@@ -609,20 +609,40 @@ article table {
   margin-right: -20px;
 }
 
-article tbody {
+article table.noborder {
+    width: auto;
+    margin-left: 0;
+    margin-right: 0;
+}
+
+article table.centered {
+    width: auto;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+article table:not(.noborder) tbody {
   border-top: 2px solid #557398;
   border-bottom: 2px solid #557398;
   background-color: #EBEFF4;
+}
+
+article table:not(.noborder).centered tbody {
+    /* All borders */
+    border: 2px solid #557398;
 }
 
 article table td * {
   margin: 0;
 }
 
-article td {
+article table td {
+    padding: 5px;
+}
+
+article table:not(.noborder):not(.noinnerborder) td {
   border-right: 1px solid #557398;
   border-bottom: 1px solid #557398;
-  padding: 5px;
 }
 
 article td:first-child,
