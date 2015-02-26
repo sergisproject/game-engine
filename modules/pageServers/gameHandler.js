@@ -9,11 +9,12 @@ var fs = require("fs"),
     path = require("path");
 
 // required modules
-var router = require("express").Router();
+var express = require("express");
 
 // our modules
 var config = require("../../config"),
     writer = require("../../modules/writer");
+
 
 // test auth tokens module
 var TEST_AUTH_TOKENS = require("../../TEST_AUTH_TOKENS");
@@ -23,6 +24,10 @@ var TEST_CONTENT_COMPONENTS = require("../../TEST_CONTENT_COMPONENTS");
 var TEST_GAMES = require("../../TEST_GAMES");
 // test users module
 var TEST_USERS = require("../../TEST_USERS");
+
+
+// The router for /game/
+var router = module.exports = express.Router();
 
 
 // Handler for GET requests to /game/GAME NAME HERE

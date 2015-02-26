@@ -15,6 +15,10 @@ var config = require("../../config");
 var TOKEN_LENGTH = 14;
 
 
+// The AuthToken model (created in the `module.exports` function below)
+var AuthToken;
+
+
 /**
  * Generate a random, pretty guaranteed unique auth token.
  */
@@ -23,10 +27,61 @@ function generateToken() {
         .toString("base64")
         .substring(0, TOKEN_LENGTH)
         // Turn obscure base64 characters into less obscure characters
-        .replace(/+/g, ".")
+        .replace(/\+/g, ".")
         .replace(/\//g, ",")
         // Add the current time for more uniqueness
         + (new Date()).getTime().toString(36);
+}
+
+/**
+ * Check for the presence of an auth token in an Express request. If one doesn't
+ * exist (or is invalid), generate a new one.
+ *
+ * @param req - The Express request object.
+ * @param {boolean} regenerateToken - Whether to regenerate the token if it
+ *        already exists.
+ *
+ * @return {Promise.<AuthToken>} The AuthToken instance.
+ */
+function checkTokenFromReq(req, regenerateToken) {
+    return new Promise(function (resolve, reject) {
+        var generateNewToken = function () {
+            var authToken = new AuthToken();
+            authToken.generateToken();
+            authToken.save(function (err) {
+                if (err) {
+                    reject(err);
+                    return;
+                }
+                resolve(authToken);
+            });
+        };
+        
+        if (req.signedCookies.t) {
+            // Check the token
+            AuthToken.findOne({token: req.signedCookies.t}).populate("user").exec(function (err, authToken) {
+                if (authToken) {
+                    // We're good!
+                    if (regenerateToken) {
+                        // Generate a new one, just for fun
+                        authToken.generateToken();
+                    }
+                    authToken.save(function (err) {
+                        if (err) {
+                            reject(err);
+                            return;
+                        }
+                        resolve(authToken);
+                    });
+                } else {
+                    // No good; generate a new one
+                    generateNewToken();
+                }
+            });
+        } else {
+            generateNewToken();
+        }
+    });
 }
 
 
@@ -36,7 +91,16 @@ module.exports = function (mongoose) {
     // AuthToken schema
     var authTokenSchema = new Schema({
         // The token
-        token: String,
+        token: {
+            type: String,
+            unique: true
+        },
+        
+        // The user associated with this token (if any)
+        user: {
+            type: Schema.Types.ObjectId,
+            ref: "User"
+        },
 
         // The date that the token was created
         dateCreated: {
@@ -51,9 +115,17 @@ module.exports = function (mongoose) {
         }
     });
     
+    
+    // AuthToken model instance method
     authTokenSchema.methods.generateToken = function () {
         return (this.token = generateToken());
     };
     
-    return mongoose.model("AuthToken", authTokenSchema);
+    
+    // AuthToken model static method
+    authTokenSchema.statics.checkTokenFromReq = checkTokenFromReq;
+    
+    
+    // AuthToken model
+    return (AuthToken = mongoose.model("AuthToken", authTokenSchema));
 };

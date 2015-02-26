@@ -20,6 +20,10 @@ var HASH_NUM_ITERATIONS = 10000;
 var HASH_DERIVED_KEY_LENGTH = 30;
 
 
+// The User model (created in the `module.exports` function below)
+var User;
+
+
 /**
  * Encrypt a password.
  *
@@ -96,6 +100,45 @@ function checkPassword(password, encryptedPassword) {
 }
 
 
+/**
+ * Check a username and password to see if it matches a user account.
+ *
+ * @param {string} username - The username for the account.
+ * @param {string} password - The password for the account.
+ *
+ * @return {Promise.<?User>} The User matching this account, or null if no
+ *         matching user was found.
+ */
+function checkLoginInfo(username, password) {
+    return new Promise(function (resolve, reject) {
+        // Find the username
+        User.findOne({username: username}, function (err, user) {
+            if (err) {
+                reject(err);
+                return;
+            }
+            
+            // Make sure the username was good
+            if (!user) {
+                resolve(null);
+                return;
+            }
+            
+            // Check password
+            user.checkPassword(password).then(function (isTheUserTellingTheTruth) {
+                if (isTheUserTellingTheTruth) {
+                    // Yay, the user wasn't lying to us!
+                    resolve(user);
+                } else {
+                    // The user was lying to us.
+                    resolve(null);
+                }
+            }, reject);
+        });
+    });
+}
+
+
 module.exports = function (mongoose) {
     var Schema = mongoose.Schema;
     
@@ -131,26 +174,60 @@ module.exports = function (mongoose) {
             // Any user variables stored with this user and game combination
             userVars: Schema.Types.Mixed
         }],
-
-        // Any auth tokens created for the authentication of the user
-        authTokens: [{
-            type: Schema.Types.ObjectId,
-            ref: "AuthToken"
-        }]
+        
+        // Privileges that the user has
+        privileges: {
+            // Full admin privileges
+            fullAdmin: {
+                type: Boolean,
+                default: false
+            }
+        }
     });
     
+    
+    // User model instance method
+    /**
+     * Check user account's password.
+     *
+     * @param {string} password - The password to check.
+     *
+     * @return {Promise.<boolean>} Whether the password matches the one stored
+     *         for the account.
+     */
     userSchema.methods.checkPassword = function (password) {
         return checkPassword(password, this.encryptedPassword);
     };
     
+    // User model instance method
+    /**
+     * Set a new password for a user account.
+     *
+     * @param {string} password - The new password.
+     *
+     * @return {Promise} Resolved if setting the new password was successful.
+     */
     userSchema.methods.setPassword = function (password) {
+        var user = this;
         return new Promise(function (resolve, reject) {
             encryptPassword(password).then(function (encryptedPassword) {
-                this.encryptedPassword = encryptedPassword;
-                resolve();
+                user.encryptedPassword = encryptedPassword;
+                user.save(function (err) {
+                    if (err) {
+                        reject(err);
+                        return;
+                    }
+                    resolve();
+                });
             }, reject);
         });
     };
     
-    return mongoose.model("User", userSchema);
+    
+    // User model static method
+    userSchema.statics.checkLoginInfo = checkLoginInfo;
+    
+    
+    // User model
+    return (User = mongoose.model("User", userSchema));
 };
