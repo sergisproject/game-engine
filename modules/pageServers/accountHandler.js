@@ -50,7 +50,9 @@ function checkToken(req, res, regenerateToken, pageHandler) {
 }
 
 // Set up body parser for POST data
-router.use(bodyParser.urlencoded());
+router.use(bodyParser.urlencoded({
+    extended: true
+}));
 
 router.get("/login", function (req, res) {
     checkToken(req, res, pageHandlers.loginGet);
