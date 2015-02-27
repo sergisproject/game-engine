@@ -33,7 +33,19 @@ module.exports = function (mongoose) {
         gameStates: [{
             type: Schema.Types.ObjectId,
             ref: "GameState"
-        }]
+        }],
+        
+        // The access permissions for the game
+        // "public" (default): anyone can access without login
+        // "protected": anyone with an account can access
+        // "private": users must specifically be allowed to access
+        access: {
+            type: String,
+            default: "public",
+            validator: function (value) {
+                return ["public", "protected", "private"].indexOf(value) != -1;
+            }
+        }
     });
     
     
