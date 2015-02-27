@@ -196,7 +196,11 @@ module.exports = function (mongoose) {
      *         for the account.
      */
     userSchema.methods.checkPassword = function (password) {
-        return checkPassword(password, this.encryptedPassword);
+        if (this.encryptedPassword) {
+            return checkPassword(password, this.encryptedPassword);
+        } else {
+            return Promise.resolve(false);
+        }
     };
     
     // User model instance method
