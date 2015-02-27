@@ -12,8 +12,8 @@ sergis.game = {
 };
 
 (function () {
-    // The game ID of the game that we are playing (set in `init`)
-    var gameID;
+    // The game name of the game that we are playing (set in `init`)
+    var gameName;
     
     // The auth token to use for requests (set in `init`)
     var authToken;
@@ -68,15 +68,15 @@ sergis.game = {
     /**
      * Initialize the game variables.
      *
-     * @param {string} _gameID - The game ID of the game that we are playing.
+     * @param {string} _gameName - The name of the game that we are playing.
      * @param {string} _authToken - The auth token to use for requests.
      */
-    sergis.game.init = function (_gameID, _authToken) {
+    sergis.game.init = function (_gameName, _authToken) {
         // This function can only be called once
         sergis.game.init = function () {};
         
         // Set game variables
-        gameID = _gameID;
+        gameName = _gameName;
         authToken = _authToken;
         
         // Start the game once everything is loaded
@@ -88,9 +88,9 @@ sergis.game = {
      * Actually load and start the game.
      */
     function startGame() {
-        alert("Starting game " + gameID + "!\nAuth token: " + authToken);
+        alert("Starting game " + gameName + "!\nAuth token: " + authToken);
         sergis.socket.emit("ready", {
-            gameID: gameID,
+            gameName: gameName,
             authToken: authToken
         }, function (err, contentComponents) {
             if (err) {

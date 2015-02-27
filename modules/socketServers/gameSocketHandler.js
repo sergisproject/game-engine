@@ -10,6 +10,7 @@ var fs = require("fs"),
 
 // our modules
 var config = require("../../config"),
+    db = require("../db"),
     writer = require("../writer.js");
 
 // test auth tokens module
@@ -34,13 +35,13 @@ module.exports = function (socket, next) {
     /*
     The client will send a "ready" event once it's all loaded up.
     data: {
-        gameID: string
+        gameName: string
         authToken: string
     }
     callback(error message or null, initial game state)
     */
     socket.on("ready", function (data, callback) {
-        var gameID = data.gameID,
+        var gameName = data.gameName,
             authToken = data.authToken;
 
         // Check auth token
@@ -54,14 +55,14 @@ module.exports = function (socket, next) {
         var user = TEST_USERS[TEST_AUTH_TOKENS[authToken].userID];
         
         // Check game ID
-        if (!TEST_GAMES.hasOwnProperty(gameID)) {
+        if (!TEST_GAMES.hasOwnProperty(gameName)) {
             // Invalid game ID!
             callback("Invalid game ID.");
             return;
         }
         
         // Get game from game ID
-        var game = TEST_GAMES[gameID];
+        var game = TEST_GAMES[gameName];
         
         // All is good; make GameSocket
         new GameSocket(socket, game, user, callback);
