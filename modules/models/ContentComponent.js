@@ -8,6 +8,11 @@
 var config = require("../../config"),
     contentComponentTypes = require("../contentComponentTypes");
 
+
+// The ContentComponent model (created in the `module.exports` function below)
+var ContentComponent;
+
+
 module.exports = function (mongoose) {
     var Schema = mongoose.Schema;
     
@@ -34,5 +39,7 @@ module.exports = function (mongoose) {
         jsDependencies: [String]
     });
     
-    return mongoose.model("ContentComponent", contentComponentSchema);
+    
+    // ContentComponent model
+    return (ContentComponent = mongoose.model("ContentComponent", contentComponentSchema));
 };

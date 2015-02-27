@@ -7,6 +7,11 @@
 // our modules
 var config = require("../../config");
 
+
+// The GameState model (created in the `module.exports` function below)
+var GameState;
+
+
 module.exports = function (mongoose) {
     var Schema = mongoose.Schema;
     
@@ -40,5 +45,7 @@ module.exports = function (mongoose) {
         }]
     });
     
-    return mongoose.model("GameState", gameStateSchema);
+    
+    // GameState model
+    return (GameState = mongoose.model("GameState", gameStateSchema));
 };

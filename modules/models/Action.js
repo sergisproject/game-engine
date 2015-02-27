@@ -8,6 +8,11 @@
 var config = require("../../config"),
     actionTypes = require("../actionTypes");
 
+
+// The Action model (created in the `module.exports` function below)
+var Action;
+
+
 module.exports = function (mongoose) {
     var Schema = mongoose.Schema;
     
@@ -25,5 +30,7 @@ module.exports = function (mongoose) {
         data: Schema.Types.Mixed
     });
     
-    return mongoose.model("Action", actionSchema);
+    
+    // Action model
+    return (Action = mongoose.model("Action", actionSchema));
 };

@@ -8,6 +8,11 @@
 var config = require("../../config"),
     contentComponentTypes = require("../contentComponentTypes");
 
+
+// The Game model (created in the `module.exports` function below)
+var Game;
+
+
 module.exports = function (mongoose) {
     var Schema = mongoose.Schema;
     
@@ -31,5 +36,7 @@ module.exports = function (mongoose) {
         }]
     });
     
-    return mongoose.model("Game", gameSchema);
+    
+    // Game model
+    return (Game = mongoose.model("Game", gameSchema));
 };
