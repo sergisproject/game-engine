@@ -88,7 +88,7 @@ function getContentComponent(id, callback) {
     var contentComponent = TEST_CONTENT_COMPONENTS[id];
     contentComponentTemplateWriter.render(contentComponent.type + ".html", contentComponent.vars || {}, function (err, data) {
         if (err) {
-            console.log("Error rendering Content Component template:", err);
+            config.error(err, "rendering Content Component template");
             callback(new Error("Error rendering Content Component template."));
             // "Internal Server Error"
             //writer.writeError(res, 500, "Error rendering Content Component template.");

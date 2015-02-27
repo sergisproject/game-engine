@@ -89,9 +89,9 @@ function runExitHandlers(reason) {
         console.log("Exiting server...");
         process.exit();
     }, function (err) {
-        console.log("Error running exit handler: ", err);
+        console.error("Error running exit handler: ", err.stack);
     }).catch(function (err) {
-        console.log("Error running exit handlers: ", err);
+        console.error("Error running exit handlers: ", err.stack);
     });
 }
 

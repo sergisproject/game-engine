@@ -187,7 +187,7 @@ var pageHandlers = {
                     user.setPassword(password).then(function () {
                         res.redirect("/account/admin");
                     }, function (err) {
-                        console.log("Error setting password: ", err);
+                        config.error(err, "setting password");
                         writer.writeError(res, 500);
                         return;
                     });
