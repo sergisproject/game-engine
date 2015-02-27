@@ -13,15 +13,6 @@ var config = require("../../config"),
     db = require("../db"),
     writer = require("../writer.js");
 
-// test auth tokens module
-var TEST_AUTH_TOKENS = require("../../TEST_AUTH_TOKENS");
-// test content components module
-var TEST_CONTENT_COMPONENTS = require("../../TEST_CONTENT_COMPONENTS");
-// test games module
-var TEST_GAMES = require("../../TEST_GAMES");
-// test users module
-var TEST_USERS = require("../../TEST_USERS");
-
 
 /**
  * Initialize the handler for connections to the "/game" socket.
@@ -44,28 +35,25 @@ module.exports = function (socket, next) {
         var gameName = data.gameName,
             authToken = data.authToken;
 
-        // Check auth token
-        if (!TEST_AUTH_TOKENS.hasOwnProperty(authToken)) {
-            // Invalid auth token!
-            callback("Invalid auth token.");
-            return;
-        }
-        
-        // Get user from auth token
-        var user = TEST_USERS[TEST_AUTH_TOKENS[authToken].userID];
-        
-        // Check game ID
-        if (!TEST_GAMES.hasOwnProperty(gameName)) {
-            // Invalid game ID!
-            callback("Invalid game ID.");
-            return;
-        }
-        
-        // Get game from game ID
-        var game = TEST_GAMES[gameName];
-        
-        // All is good; make GameSocket
-        new GameSocket(socket, game, user, callback);
+        db.models.AuthToken.findOne({token: authToken}).populate("user").exec(function (err, authToken) {
+            if (err || !authToken) {
+                if (err) config.error(err, "checking auth token from socket");
+                callback("Invalid auth token.");
+                return;
+            }
+            
+            // Check game ID
+            db.models.Game.findOne({name: gameName}).populate("gameStates").exec(function (err, game) {
+                if (err || !game) {
+                    if (err) config.error(err, "getting game from game name");
+                    callback("Invalid game name.");
+                    return;
+                }
+                
+                // We're all good; make GameSocket
+                new GameSocket(socket, game, user || null, callback);
+            });
+        });
     });
     
     // Everything's initialized for us; move on!
@@ -73,6 +61,7 @@ module.exports = function (socket, next) {
 };
 
 
+/*
 ///////////////////////////////////////////////////////////////////////////////
 // Writer for Content Component templates
 var contentComponentTemplateWriter = new writer.Writer(config.CONTENT_COMPONENTS_TEMPLATES_DIR);
@@ -99,6 +88,7 @@ function getContentComponent(id, callback) {
         callback(null, data);
     });
 }
+*/
 
 
 
@@ -117,39 +107,76 @@ function getContentComponent(id, callback) {
  *
  * @param socket - The Socket.IO socket connection to the client.
  * @param {object} game - The game data from the database.
- * @param {object} user - The user data from the database.
+ * @param {object} authToken - The auth token for either the current user's
+ *        session or an anonymous user's session (since not all games require
+ *        login).
  * @param {GameSocket~requestCallback} initialCallback - The callback to give
  *        the client the initial game state.
  */
-function GameSocket(socket, game, user, initialCallback) {
+function GameSocket(socket, game, authToken, initialCallback) {
     this.socket = socket;
     this.game = game;
-    this.user = user;
+    this.authToken = authToken;
     
-    // Check user object
-    if (!this.user.games) this.user.games = {};
-    if (!this.user.games[this.game.name]) this.user.games[this.game.name] = {};
-    
-    // Make shortcut for user.games[game.name]
-    this.userGame = this.user.games[this.game.name];
-    
-    // Check userGame.userVars
-    if (!this.userGame.userVars) this.userGame.userVars = {};
-    
-    // Check userGame.currentGameStateIndex
-    if (typeof this.userGame.currentGameStateIndex != "number") {
-        this.userGame.currentGameStateIndex = this.game.initialGameStateIndex;
-    }
-    
-    // Set up socket handlers (getUserVar, setUserVar)
-    for (var eventName in GameSocket.handlers) {
-        if (GameSocket.handlers.hasOwnProperty(eventName)) {
-            this.socket.on(eventName, GameSocket.handlers[eventName].bind(this));
+    // Make place for storing user variables
+    // User variables are stored with the user if a user is logged in, or with
+    // the auth token if no user is logged in.
+    if (this.authToken.user) {
+        // The user has never played this game before
+        if (!this.authToken.user.playedGames[this.game._id]) {
+            this.authToken.user.playedGames[this.game._id] = {
+                userVars: {},
+                currentGameStateIndex: this.game.initialGameStateIndex
+            };
         }
+        // Store reference to the current user/game state
+        this.state = this.authToken.user.playedGames[this.game._id];
+    } else {
+        // Store with the auth token
+        if (!this.authToken.playedGames[this.game._id]) {
+            this.authToken.playedGames[this.game._id] = {
+                userVars: {},
+                currentGameStateIndex: this.game.initialGameStateIndex
+            };
+        }
+        // Store reference to the current session/game state
+        this.state = this.authToken.playedGames[this.game._id];
     }
     
-    // Get dat client started
-    initialCallback(null, this.game.gameStates[this.userGame.currentGameStateIndex].contentComponents);
+    /**
+     * Function to save the current user/game or session/game state.
+     * @return {Promise}
+     */
+    this.saveState = function () {
+        var that = this;
+        return new Promise(function (resolve, reject) {
+            that.authToken.save(function (err) {
+                if (err) {
+                    reject(err);
+                } else {
+                    resolve();
+                }
+            });
+        });
+    };
+    
+    // Save the current state
+    var that = this;
+    this.saveState().then(function () {
+        // Set up socket handlers (getUserVar, setUserVar)
+        for (var eventName in GameSocket.handlers) {
+            if (GameSocket.handlers.hasOwnProperty(eventName)) {
+                that.socket.on(eventName, GameSocket.handlers[eventName].bind(that));
+            }
+        }
+        
+        // Get dat client started
+        initialCallback(null, that.game.gameStates[that.state.currentGameStateIndex].contentComponents);
+    }, function (err) {
+        // Ahhhh! Bad start!
+        config.error(err, "saving initial session/user/game state");
+        initialCallback("Error initializing game.");
+    });
 }
 
 /**
@@ -173,10 +200,10 @@ GameSocket.handlers = {
     getUserVar: function (data, callback) {
         if (!data || !data.name) {
             callback("Invalid data.");
-        } else if (!this.userGame.userVars.hasOwnProperty(data.name)) {
+        } else if (!this.state.userVars.hasOwnProperty(data.name)) {
             callback("Invalid user variable name.");
         } else {
-            callback(null, this.userGame.userVars[name]);
+            callback(null, this.state.userVars[name]);
         }
     },
 
@@ -190,7 +217,12 @@ GameSocket.handlers = {
      * @param {GameSocket~requestCallback} callback
      */
     setUserVar: function (data, callback) {
-        this.userGame.userVars[data.name] = data.value;
-        callback(null);
+        this.state.userVars[data.name] = data.value;
+        this.saveState().then(function () {
+            callback(null);
+        }, function (err) {
+            config.error(err, "setting user var");
+            callback("Error setting user var.");
+        });
     }
 };

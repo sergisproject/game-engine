@@ -163,17 +163,9 @@ module.exports = function (mongoose) {
             ref: "Game"
         }],
 
-        // Data about the games that the user has played
-        playedGames: [{
-            // The game
-            game: {
-                type: Schema.Types.ObjectId,
-                ref: "Game"
-            },
-
-            // Any user variables stored with this user and game combination
-            userVars: Schema.Types.Mixed
-        }],
+        // Data about the games that the user has played, by game
+        // keys: game IDs, values: objects
+        playedGames: Schema.Types.Mixed,
         
         // Privileges that the user has
         privileges: {

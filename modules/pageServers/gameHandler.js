@@ -17,16 +17,6 @@ var config = require("../../config"),
     writer = require("../writer");
 
 
-// test auth tokens module
-var TEST_AUTH_TOKENS = require("../../TEST_AUTH_TOKENS");
-// test content components module
-var TEST_CONTENT_COMPONENTS = require("../../TEST_CONTENT_COMPONENTS");
-// test games module
-var TEST_GAMES = require("../../TEST_GAMES");
-// test users module
-var TEST_USERS = require("../../TEST_USERS");
-
-
 // The router for /game/
 var router = module.exports = express.Router();
 

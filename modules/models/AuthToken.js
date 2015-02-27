@@ -101,6 +101,11 @@ module.exports = function (mongoose) {
             type: Schema.Types.ObjectId,
             ref: "User"
         },
+        
+        // Data about games played with this session (only used if no user is
+        // logged in)
+        // keys: game IDs, values: objects
+        playedGames: Schema.Types.Mixed,
 
         // The date that the token was created
         dateCreated: {
