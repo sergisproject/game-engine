@@ -44,7 +44,7 @@ function checkToken(req, res, regenerateToken, pageHandler) {
         pageHandler(req, res, authToken);
     }, function (err) {
         // AHHHHHHHHHHHHHHHHHHH!!!
-        console.error("Error checking auth token: ", err);
+        config.error(err, "checking auth token");
         writer.writeError(res, 500);
     });
 }
@@ -114,7 +114,7 @@ var pageHandlers = {
                 authToken.user = user;
                 authToken.save(function (err) {
                     if (err) {
-                        console.error("Error saving authToken after assigning user: ", err);
+                        config.error(err, "saving authToken after assigning user");
                         writer.writeError(res, 500);
                         return;
                     }
@@ -123,7 +123,7 @@ var pageHandlers = {
                     res.redirect("/account");
                 });
             }, function (err) {
-                console.error("Error checking login info: ", err);
+                config.error(err, "checking login info");
                 writer.writeError(res, 500);
             });
         } else {
@@ -159,7 +159,7 @@ var pageHandlers = {
         // TODO: Check if a user is logged in and, if so, whether they have admin privileges
         db.models.User.find({}, function (err, users) {
             if (err) {
-                console.error("Error finding users: ", err);
+                config.error(err, "finding users");
                 writer.writeError(res, 500);
                 return;
             }

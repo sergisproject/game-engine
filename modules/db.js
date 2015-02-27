@@ -36,7 +36,7 @@ mongoose.connect(config.MONGODB_SERVER, {
 var db = mongoose.connection;
 
 db.on("error", function (err) {
-    console.error("Error connecting to MongoDB at " + config.MONGODB_SERVER + ": ", err);
+    console.error("Error connecting to MongoDB at " + config.MONGODB_SERVER + ": ", err.stack);
 });
 
 db.once("open", function () {
@@ -44,10 +44,7 @@ db.once("open", function () {
     
     // Load models from `models` directory
     fs.readdir(modelsDir, function (err, files) {
-        if (err) {
-            console.error("Error reading files from models directory at " + modelsDir + ": ", err);
-            return;
-        }
+        if (err) return config.error(err, "reading files from models directory at " + modelsDir);
         
         // Load all the models
         try {

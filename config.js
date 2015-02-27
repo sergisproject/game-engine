@@ -8,6 +8,9 @@ var path = require("path");
 var config = module.exports = {};
 
 
+////////////////////////////////////////////////////////////////////////////////
+// Server
+
 /** Whether we're in development mode */
 //config.DEVELOPMENT = process.env.NODE_ENV && process.env.NODE_ENV.toLowerCase() == "development";
 config.DEVELOPMENT = true;
@@ -37,7 +40,6 @@ config.SOCKET_IO_ORIGIN = "";
 ////////////////////////////////////////////////////////////////////////////////
 // Directories
 
-
 /** Templates directory */
 config.TEMPLATES_DIR = path.join(__dirname, "templates");
 
@@ -56,4 +58,17 @@ config.CONTENT_COMPONENTS_TEMPLATES_DIR = path.join(__dirname, "content-componen
 
 /** Cookie signing key (if not specified, cookies are not signed) */
 config.COOKIE_SIGNING_KEY = "testsigner";
+
+/**
+ * Function to handle reporting any errors.
+ * It must be defined as something, even if it's just an empty function
+ * (otherwise, expect little errors to make everything explode).
+ *
+ * @param {Error} err - An Error object representing the error.
+ * @param {string} [details=""] - Any details about what may have caused the
+ *        error.
+ */
+config.error = function (err, details) {
+    console.error("\nError" + (details ? " (" + details + ")" : "") + ": ", err.stack);
+};
 
