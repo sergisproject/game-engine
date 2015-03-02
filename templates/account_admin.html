@@ -16,16 +16,19 @@
     
     <div id="container">
         <h2>Admin</h2>
+        <p>Logged in as {{name}}</p>
         <div id="main" role="main">
-            <article>{{#error}}
-                <p>{{error}}</p>{{/error}}
+            <article>{{#message}}
+                <p>{{message}}</p>{{/message}}
                 <form action="" method="POST" type="application/x-www-form-urlencoded">
                     <input type="hidden" name="action" value="createUser">
                     <h3>Create User</h3>
                     <table class="noinnerborder">
                         <tbody>
-                            <tr><td><label for="account_u">Username: </label></td><td><input name="u" id="account_u"></td></tr>
-                            <tr><td><label for="account_p">Password: </label></td><td><input name="p" id="account_p"></td></tr>
+                            <tr><td><label for="account_u">Username: </label></td><td><input name="u" id="account_u" required></td></tr>
+                            <tr><td><label for="account_p">Password: </label></td><td><input name="p" id="account_p" required></td></tr>
+                            <tr><td><label for="account_name">Display Name: </label></td><td><input name="name" id="account_name"></td></tr>
+                            <tr><td>&nbsp;</td><td><input type="checkbox" id="fullAdmin" name="fullAdmin" value="fullAdmin"><label for="fullAdmin"> Admin Rights</label></td></tr>
                             <tr><td>&nbsp;</td><td><input type="submit" value="Create User"></td></tr>
                         </tbody>
                     </table>
@@ -35,11 +38,11 @@
                     <h3>Existing Users</h3>
                     <table class="noinnerborder">
                         <thead>
-                            <tr><th>Username</th></tr>
+                            <tr><th>Username</th><th>Display Name</th><th>Privileges</th></tr>
                         </thead>
                         <tbody>
                             {{#users}}
-                            <tr><td>{{username}}</td><td>{{encryptedPassword}}</td></tr>
+                            <tr><td>{{username}}</td><td>{{name}}</td><td>{{privileges}}</td><td><button type="submit" name="deleteUser" value="{{username}}">Delete</button></td></tr>
                             {{/users}}
                         </tbody>
                     </table>

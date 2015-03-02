@@ -16,6 +16,7 @@
     
     <div id="container">
         <h2>Account - {{name}}</h2>
+        <p>{{#admin}}<a href="/account/admin">Admin</a> {{/admin}}<a href="/account/logout">Log Out</a></p>
         <div id="main" role="main">
             <article>{{#error}}
                 <p>{{error}}</p>{{/error}}

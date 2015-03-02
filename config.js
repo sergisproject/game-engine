@@ -9,6 +9,25 @@ var config = module.exports = {};
 
 
 ////////////////////////////////////////////////////////////////////////////////
+// Authentication
+
+/**
+ * Super-admin account.
+ *
+ * The super-admin username and password are attached to an account with full
+ * admin access, but no other rights as an account (i.e., they can't use their
+ * account to play games, etc.)
+ * This is useful when first setting up the server (before any real accounts are
+ * created yet).
+ *
+ * Set the username and/or the password to a falsy value to disable the super-
+ * admin account (recommended after server is set up).
+ */
+config.SUPER_ADMIN_USERNAME = "admin";
+config.SUPER_ADMIN_PASSWORD = "admin";
+
+
+////////////////////////////////////////////////////////////////////////////////
 // Server
 
 /** Whether we're in development mode */

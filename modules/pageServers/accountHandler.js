@@ -62,8 +62,16 @@ router.post("/login", function (req, res) {
     checkToken(req, res, true, pageHandlers.loginPost);
 });
 
+router.get("/logout", function (req, res) {
+    checkToken(req, res, pageHandlers.logout);
+});
+
+router.post("/logout", function (req, res) {
+    checkToken(req, res, pageHandlers.logout);
+});
+
 router.get("", function (req, res) {
-    checkToken(req, res, pageHandlers.homeGet);
+    checkToken(req, res, pageHandlers.home);
 });
 
 router.post("", function (req, res) {
@@ -71,7 +79,7 @@ router.post("", function (req, res) {
 });
 
 router.get("/admin", function (req, res) {
-    checkToken(req, res, pageHandlers.adminGet);
+    checkToken(req, res, pageHandlers.admin);
 });
 
 router.post("/admin", function (req, res) {
@@ -79,6 +87,7 @@ router.post("/admin", function (req, res) {
 });
 
 
+/** Page handlers */
 var pageHandlers = {
     ////////////////////////////////////////////////////////////////////////////
     // Handler for GET requests to /account/login
@@ -101,31 +110,49 @@ var pageHandlers = {
             password = req.body.p,
             rememberMe = req.body.r === "r";
         if (username && password) {
-            db.models.User.checkLoginInfo(username, password).then(function (user) {
-                if (!user) {
-                    writer.write(res, "account_login.html", {
-                        error: "Username or password incorrect.",
-                        rememberMe: rememberMe
-                    });
-                    return;
-                }
-                
-                // We're all logged in now!
-                authToken.user = user;
+            // First, check if it's the SUPER-ADMIN login
+            if (config.SUPER_ADMIN_USERNAME && config.SUPER_ADMIN_PASSWORD &&
+                username == config.SUPER_ADMIN_USERNAME && password == config.SUPER_ADMIN_PASSWORD) {
+                // Woohoo, super admin!!
+                authToken.superAdmin = true;
                 authToken.save(function (err) {
                     if (err) {
-                        config.error(err, "saving authToken after assigning user");
+                        config.error(err, "saving authToken after assigning superAdmin");
                         writer.writeError(res, 500);
                         return;
                     }
                     
-                    // We're all good now; redirect to account home
-                    res.redirect("/account");
+                    // Redirect to admin page
+                    res.redirect("/account/admin");
                 });
-            }, function (err) {
-                config.error(err, "checking login info");
-                writer.writeError(res, 500);
-            });
+            } else {
+                // Must be just a normal user
+                db.models.User.checkLoginInfo(username, password).then(function (user) {
+                    if (!user) {
+                        writer.write(res, "account_login.html", {
+                            error: "Username or password incorrect.",
+                            rememberMe: rememberMe
+                        });
+                        return;
+                    }
+
+                    // We're all logged in now!
+                    authToken.user = user;
+                    authToken.save(function (err) {
+                        if (err) {
+                            config.error(err, "saving authToken after assigning user");
+                            writer.writeError(res, 500);
+                            return;
+                        }
+
+                        // We're all good now; redirect to account home
+                        res.redirect("/account");
+                    });
+                }, function (err) {
+                    config.error(err, "checking login info");
+                    writer.writeError(res, 500);
+                });
+            }
         } else {
             writer.write(res, "account_login.html", {
                 error: "Please enter both a username and a password.",
@@ -135,8 +162,21 @@ var pageHandlers = {
     },
     
     ////////////////////////////////////////////////////////////////////////////
-    // Handler for GET requests to /account or /account/
-    homeGet: function (req, res, authToken) {
+    // Handler for GET and POST requests to /account/logout
+    logout: function (req, res, authToken) {
+        // Destroy the auth token
+        db.models.AuthToken.remove({_id: authToken._id}, function (err) {
+            if (err) config.error(err, "logging off / removing auth token");
+            // Remove the auth token cookie
+            res.clearCookie("t", {signed: true});
+            // Redirect to login page
+            res.redirect("/account/login");
+        });
+    },
+    
+    ////////////////////////////////////////////////////////////////////////////
+    // Handler for GET requests (and POST, indirectly) to /account or /account/
+    home: function (req, res, authToken) {
         // If the user isn't logged in, they need to do that first
         if (!authToken.user) {
             res.redirect("/account/login");
@@ -170,7 +210,8 @@ var pageHandlers = {
                 // Write out the account home page
                 writer.write(res, "account_home.html", {
                     name: authToken.user.name || authToken.user.username,
-                    games: allowedGames
+                    games: allowedGames,
+                    admin: !!(authToken.user.privileges.fullAdmin)
                 });
             });
         }
@@ -179,54 +220,107 @@ var pageHandlers = {
     ////////////////////////////////////////////////////////////////////////////
     // Handler for POST requests to /account or /account/
     homePost: function (req, res, authToken) {
-        res.redirect("/account");
+        pageHandlers.home(req, res, authToken);
     },
     
     ////////////////////////////////////////////////////////////////////////////
-    // Handler for GET requests to /account/admin
-    adminGet: function (req, res, authToken) {
-        // TODO: Check if a user is logged in and, if so, whether they have admin privileges
-        db.models.User.find({}, function (err, users) {
-            if (err) {
-                config.error(err, "finding users");
-                writer.writeError(res, 500);
-                return;
-            }
-            
-            writer.write(res, "account_admin.html", {
-                users: users
+    // Handler for GET requests (and POST, indirectly) to /account/admin
+    admin: function (req, res, authToken, message) {
+        // Is the user allowed to access this page?
+        if (authToken.superAdmin || (authToken.user && authToken.user.privileges.fullAdmin)) {
+            db.models.User.find({}, function (err, users) {
+                if (err) {
+                    config.error(err, "finding users for admin page");
+                    writer.writeError(res, 500);
+                    return;
+                }
+
+                writer.write(res, "account_admin.html", {
+                    name: authToken.user ? (authToken.user.name || authToken.user.username) : "Super Admin",
+                    users: users,
+                    message: message || undefined
+                });
             });
-        });
+        } else {
+            // No access for you!
+            writer.writeError(res, 403);
+        }
     },
     
     ////////////////////////////////////////////////////////////////////////////
     // Handler for POST requests to /account/admin
     adminPost: function (req, res, authToken) {
-        // TODO: Check if a user is logged in and has admin privileges
-        // All the possible variables
-        var action = req.body.action,
-            username = req.body.u,
-            password = req.body.p;
-        switch (action) {
-            case "createUser":
-                if (username && password) {
-                    var user = new db.models.User({
-                        username: username
-                    });
-                    user.setPassword(password).then(function () {
-                        res.redirect("/account/admin");
-                    }, function (err) {
-                        config.error(err, "setting password");
-                        writer.writeError(res, 500);
-                        return;
-                    });
-                } else {
-                    res.redirect("/account/admin");
-                }
-                break;
-            default:
-                res.redirect("/account/admin");
+        // Is the user allowed to access this page?
+        if (authToken.superAdmin || (authToken.user && authToken.user.privileges.fullAdmin)) {
+            var action = req.body.action;
+            if (!action) {
+                // Try to find the action...
+                if (req.body.deleteUser) action = "deleteUser";
+            }
+            
+            if (adminFunctions.hasOwnProperty(action)) {
+                adminFunctions[action](req.body).then(function (message) {
+                    // Everything was good, write out the admin page
+                    pageHandlers.admin(req, res, authToken, message);
+                }, function (err) {
+                    // AHHHH!
+                    config.error(err, "handling admin function: " + action);
+                    writer.writeError(res, 500);
+                });
+            } else {
+                // Bad Request
+                writer.writeError(res, 400);
+            }
+        } else {
+            // No access for you!
+            writer.writeError(res, 403);
         }
     }
 };
+
+
+/**
+ * Admin functions.
+ * Each function is passed one argument (the POST variables) and must return a
+ * Promise.
+ */
+var adminFunctions = {
+    createUser: function (post) {
+        return new Promise(function (resolve, reject) {
+            var username = post.u, password = post.p;
+            if (username && password) {
+                var user = new db.models.User({
+                    username: username,
+                    name: post.name || undefined,
+                    privileges: {
+                        fullAdmin: post.fullAdmin === "fullAdmin"
+                    }
+                });
+                // setPassword automatically saves (if it's successful) before resolving
+                user.setPassword(password).then(function () {
+                    resolve("User " + username + " created successfully.");
+                }, reject);
+            } else {
+                // It's not a fatal error, so just report it back
+                resolve("Username or password missing!");
+            }
+        });
+    },
+    
+    deleteUser: function (post) {
+        return new Promise(function (resolve, reject) {
+            // We know that post.deleteUser exists (since that's how we figured
+            // out what the action was)
+            db.models.User.remove({username: post.deleteUser}, function (err) {
+                if (err) {
+                    reject(err);
+                    return;
+                }
+                
+                resolve(post.deleteUser + " deleted successfully.");
+            });
+        });
+    }
+};
+
 

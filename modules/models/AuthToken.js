@@ -102,6 +102,13 @@ module.exports = function (mongoose) {
             ref: "User"
         },
         
+        // Whether the session associated with this token is a super-admin
+        // session (see config.js for details)
+        superAdmin: {
+            type: Boolean,
+            default: false
+        },
+        
         // Data about games played with this session (only used if no user is
         // logged in)
         // keys: game IDs, values: objects
