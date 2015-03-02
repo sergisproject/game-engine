@@ -15,11 +15,18 @@
     </header>
     
     <div id="container">
-        <h2>Account - {{user.name}}</h2>
+        <h2>Account - {{name}}</h2>
         <div id="main" role="main">
             <article>{{#error}}
                 <p>{{error}}</p>{{/error}}
-                <p>hi</p>
+                <table>
+                    <thead>
+                        <tr><td>Game Name</td><td>Last Played</td></tr>
+                    </thead>
+                    <tbody>{{#games}}
+                        <tr><td><a href="/game/{{game.name}}">{{game.displayName}}</a></td><td>{{lastPlayed}}</td></tr>{{/games}}
+                    </tbody>
+                </table>
             </article>
         </div>
     </div>

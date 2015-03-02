@@ -141,16 +141,45 @@ var pageHandlers = {
         if (!authToken.user) {
             res.redirect("/account/login");
         } else {
-            // Write out the account home page
-            //writer.write(res, "account_home.html");
-            res.end("Welcome, " + JSON.stringify(authToken.user));
+            // Get list of all the games
+            db.models.Game.find({}, function (err, games) {
+                if (err) {
+                    config.error(err, "finding games");
+                    writer.writeError(res, 500);
+                    return;
+                }
+                
+                // Make a list of allowed games for the user
+                var allowedGames = [];
+                games.forEach(function (game) {
+                    if (game.access == "public" || game.access == "protected" ||
+                        authToken.user.allowedGames.indexOf(game._id) != -1) {
+                        // The user can access this game!
+                        var lastPlayed = (
+                            authToken.user.playedGames[game.name] &&
+                            authToken.user.playedGames[game.name].lastPlayed &&
+                            (new Date(authToken.user.playedGames[game.name].lastPlayed)).toUTCString()
+                        ) || "Never played.";
+                        allowedGames.push({
+                            game: game,
+                            lastPlayed: lastPlayed
+                        });
+                    }
+                });
+                
+                // Write out the account home page
+                writer.write(res, "account_home.html", {
+                    name: authToken.user.name || authToken.user.username,
+                    games: allowedGames
+                });
+            });
         }
     },
     
     ////////////////////////////////////////////////////////////////////////////
     // Handler for POST requests to /account or /account/
     homePost: function (req, res, authToken) {
-        res.redirect("/account/login");
+        res.redirect("/account");
     },
     
     ////////////////////////////////////////////////////////////////////////////
@@ -195,6 +224,8 @@ var pageHandlers = {
                     res.redirect("/account/admin");
                 }
                 break;
+            default:
+                res.redirect("/account/admin");
         }
     }
 };

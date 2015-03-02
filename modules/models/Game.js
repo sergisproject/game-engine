@@ -18,11 +18,22 @@ module.exports = function (mongoose) {
     
     // Game schema
     var gameSchema = new Schema({
-        // The name of the game
+        // The name of the game (must be URL-allowed)
         name: {
             type: String,
             unique: true,
-            required: true
+            required: true,
+            validator: function (value) {
+                // Check for illegal URL characters
+                // Only allow the things that are allowed by encodeURIComponent:
+                //    alphabetic, decimal digits, - _ . ! ~ * ' ( )
+                return /^[A-Za-z0-9\-_\.!~*'()]+$/.test(value);
+            }
+        },
+        
+        // The display name
+        displayName: {
+            type: String
         },
 
         // The initial game state that the user starts in (corresponds to an index
