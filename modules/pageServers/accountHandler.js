@@ -112,7 +112,7 @@ var pageHandlers = {
         if (username && password) {
             // First, check if it's the SUPER-ADMIN login
             if (config.SUPER_ADMIN_USERNAME && config.SUPER_ADMIN_PASSWORD &&
-                username == config.SUPER_ADMIN_USERNAME && password == config.SUPER_ADMIN_PASSWORD) {
+                username === config.SUPER_ADMIN_USERNAME && password === config.SUPER_ADMIN_PASSWORD) {
                 // Woohoo, super admin!!
                 authToken.superAdmin = true;
                 authToken.save(function (err) {
@@ -177,8 +177,11 @@ var pageHandlers = {
     ////////////////////////////////////////////////////////////////////////////
     // Handler for GET requests (and POST, indirectly) to /account or /account/
     home: function (req, res, authToken) {
+        // If it's the super admin, redirect to the admin page
+        if (authToken.superAdmin) {
+            res.redirect("/account/admin");
         // If the user isn't logged in, they need to do that first
-        if (!authToken.user) {
+        } else if (!authToken.user) {
             res.redirect("/account/login");
         } else {
             // Get list of all the games
