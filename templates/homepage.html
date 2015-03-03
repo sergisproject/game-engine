@@ -5,30 +5,40 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>SerGIS Game Engine</title>
+    <!--[if lt IE 9]><script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script><![endif]-->
+    <link rel="stylesheet" type="text/css" href="/static/normalize.css">
     <link rel="stylesheet" type="text/css" href="/static/style.css">
 </head>
 
 <body>
-<div class="wrapper">
     <header>
-        <h1 class="title">SerGIS Game Engine</h1>
+        <h1>SerGIS Game Engine</h1>
+        <p>&nbsp;</p>
     </header>
     
-    <div id="container">
-        <h2>The SerGIS Project</h2>
-        <div id="main" role="main">
-            <article>
-                <p>Hello there!</p>
-            </article>
+    <div id="banner-outer">
+        <div id="banner-inner">{{#name}}
+            <span>{{name}}</span>{{/name}}
+            <ul>{{#name}}
+                <li><a class="button" href="/account/">Account</a></li>{{/name}}{{^name}}
+                <li><a class="button" href="/account/login">Log In</a></li>{{/name}}
+            </ul>
         </div>
     </div>
     
-    <footer>
-        <div class="creds">
-            <small>Copyright &copy; 2015, SerGIS Project Contributors.</small>
-        </div>
-    </footer>
-</div>
+    <div class="wrapper">
+        <section>
+            <h2>Welcome to the SerGIS Project!</h2>
+            <p><a href="/account/login">Log In</a> to view available games.</p>{{#ifgames}}
+            <h2>Public Games</h2>
+            <ul>
+                {{#games}}<li></li>{{/games}}
+            </ul>{{/ifgames}}
+        </section>
 
+        <footer>
+            <p>Copyright &copy; 2015, SerGIS Project Contributors.</p>
+        </footer>
+    </div>
 </body>
 </html>

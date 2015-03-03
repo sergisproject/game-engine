@@ -5,38 +5,42 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Login - SerGIS Game Engine</title>
+    <!--[if lt IE 9]><script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script><![endif]-->
+    <link rel="stylesheet" type="text/css" href="/static/normalize.css">
     <link rel="stylesheet" type="text/css" href="/static/style.css">
 </head>
 
 <body>
-<div class="wrapper">
     <header>
-        <h1 class="title">SerGIS Game Engine</h1>
+        <h1>SerGIS Game Engine</h1>
+        {{! <p>TAGLINE HERE</p> }}
     </header>
     
-    <div id="container">
-        <h2>Login</h2>
-        <div id="main" role="main">
-            <article>{{#error}}
-                <p>{{error}}</p>{{/error}}
-                <form action="" method="POST" type="application/x-www-form-urlencoded">
-                    <table class="centered noinnerborder"><tbody>
-                        <tr><td><label for="login_u">Username: </label></td><td><input name="u" id="login_u"></td></tr>
-                        <tr><td><label for="login_p">Password: </label></td><td><input name="p" id="login_p" type="password"></td></tr>
-                        <tr><td>&nbsp;</td><td><input type="checkbox" name="r" id="login_r" value="r"{{#rememberMe}} checked{{/rememberMe}}><label for="login_r"> Remember Me</label></td></tr>
-                        <tr><td>&nbsp;</td><td><input type="submit" value="Log In"></td></tr>
-                    </tbody></table>
-                </form>
-            </article>
+    <div id="banner-outer">
+        <div id="banner-inner">
+            <ul>
+                <li><a class="button" href="/">Home</a></li>
+            </ul>
         </div>
     </div>
     
-    <footer>
-        <div class="creds">
-            <small>Copyright &copy; 2015, SerGIS Project Contributors.</small>
-        </div>
-    </footer>
-</div>
-
+    <div class="wrapper">
+        <section>
+            <h2>Login</h2>{{#error}}
+            <p>{{error}}</p>{{/error}}
+            <form action="" method="POST" type="application/x-www-form-urlencoded">
+                <table class="centered noborder"><tbody>
+                    <tr><td><label for="login_u">Username: </label></td><td><input name="u" id="login_u"></td></tr>
+                    <tr><td><label for="login_p">Password: </label></td><td><input name="p" id="login_p" type="password"></td></tr>
+                    <tr><td>&nbsp;</td><td><input type="checkbox" name="r" id="login_r" value="r"{{#rememberMe}} checked{{/rememberMe}}><label for="login_r"> Remember Me</label></td></tr>
+                    <tr><td>&nbsp;</td><td><input type="submit" value="Log In"></td></tr>
+                </tbody></table>
+            </form>
+        </section>
+        
+        <footer>
+            <p>Copyright &copy; 2015, SerGIS Project Contributors.</p>
+        </footer>
+    </div>
 </body>
 </html>

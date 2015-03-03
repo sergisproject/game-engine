@@ -20,7 +20,11 @@ module.exports = function (req, res, next) {
     switch (req.method) {
         case "GET":
             if (req.path == "/") {
-                writer.write(res, "homepage.html");
+                writer.write(res, "homepage.html", {
+                    name: false,
+                    ifgames: false,
+                    games: []
+                });
             } else {
                 writer.writeError(res, 404);
             }
