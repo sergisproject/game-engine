@@ -36,16 +36,13 @@ module.exports = function (mongoose, extend) {
             type: String
         },
 
-        // The initial game state that the user starts in (corresponds to an index
-        // in gameStates)
-        initialGameStateIndex: Number,
-
-        // The game states that make up this game
-        gameStates: [{
+        // The initial game state that the user starts in
+        initialGameState: {
             type: Schema.Types.ObjectId,
-            ref: "GameState"
-        }],
-        
+            ref: "GameState",
+            required: true
+        },
+
         // The access permissions for the game
         // "public" (default): anyone can access without login
         // "protected": anyone with an account can access
