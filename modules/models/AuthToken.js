@@ -30,6 +30,11 @@ module.exports = function (mongoose, extend) {
             unique: true
         },
         
+        // Any old tokens for this session
+        oldTokens: [{
+            type: String
+        }],
+        
         // The user associated with this token (if any)
         user: {
             type: Schema.Types.ObjectId,
@@ -48,14 +53,19 @@ module.exports = function (mongoose, extend) {
         // keys: game IDs, values: objects
         playedGames: Schema.Types.Mixed,
 
-        // The date that the token was created
-        dateCreated: {
+        // The date that the session was created
+        sessionCreated: {
             type: Date,
             default: Date.now
         },
+        
+        // The date that the current token was created
+        tokenCreated: {
+            type: Date
+        },
 
-        // The date that the token was last accessed
-        dateAccessed: {
+        // The date that the session/token was last accessed
+        lastAccessed: {
             type: Date,
             default: Date.now
         }
@@ -64,6 +74,10 @@ module.exports = function (mongoose, extend) {
     
     // AuthToken model instance method
     authTokenSchema.methods.generateToken = function () {
+        if (this.token) {
+            this.oldTokens.push(this.token);
+        }
+        this.tokenCreated = Date.now();
         return (this.token = generateToken());
     };
     
@@ -120,10 +134,14 @@ function checkTokenFromReq(req, regenerateToken) {
             AuthToken.findOne({token: req.signedCookies.t}).populate("user").exec(function (err, authToken) {
                 if (authToken) {
                     // We're good!
+                    // Should we regenerate token?
                     if (regenerateToken) {
-                        // Generate a new one, just for fun
+                        // Generate a new token (practically just for fun)
                         authToken.generateToken();
                     }
+                    // Set the last accessed date
+                    authToken.lastAccessed = Date.now();
+                    // Save everything
                     authToken.save(function (err) {
                         if (err) {
                             reject(err);
