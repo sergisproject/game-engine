@@ -12,7 +12,7 @@ var config = require("../../config");
 var GameState;
 
 
-module.exports = function (mongoose) {
+module.exports = function (mongoose, extend) {
     var Schema = mongoose.Schema;
     
     // GameState schema

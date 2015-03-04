@@ -85,7 +85,7 @@ function checkTokenFromReq(req, regenerateToken) {
 }
 
 
-module.exports = function (mongoose) {
+module.exports = function (mongoose, extend) {
     var Schema = mongoose.Schema;
     
     // AuthToken schema

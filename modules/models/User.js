@@ -139,7 +139,7 @@ function checkLoginInfo(username, password) {
 }
 
 
-module.exports = function (mongoose) {
+module.exports = function (mongoose, extend) {
     var Schema = mongoose.Schema;
     
     // User schema

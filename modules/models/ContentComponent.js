@@ -13,7 +13,7 @@ var config = require("../../config"),
 var ContentComponent;
 
 
-module.exports = function (mongoose) {
+module.exports = function (mongoose, extend) {
     var Schema = mongoose.Schema;
     
     // ContentComponent schema

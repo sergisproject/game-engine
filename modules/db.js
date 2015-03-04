@@ -9,7 +9,8 @@ var fs = require("fs"),
     path = require("path");
 
 // required modules
-var mongoose = require("mongoose");
+var mongoose = require("mongoose"),
+    extend = require("mongoose-schema-extend");
 
 // our modules
 var config = require("../config");
@@ -50,7 +51,8 @@ db.once("open", function () {
         try {
             for (var i = 0; i < files.length; i++) {
                 if (files[i].substr(-3) == ".js") {
-                    models[files[i].substring(0, files[i].length - 3)] = require(path.join(modelsDir, files[i]))(mongoose);
+                    // "require" this file
+                    models[files[i].substring(0, files[i].length - 3)] = require(path.join(modelsDir, files[i]))(mongoose, extend);
                 }
             }
         } catch (err) {
