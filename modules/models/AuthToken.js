@@ -18,6 +18,64 @@ var TOKEN_LENGTH = 14;
 // The AuthToken model (created in the `module.exports` function below)
 var AuthToken;
 
+// Create the AuthToken model
+module.exports = function (mongoose, extend) {
+    var Schema = mongoose.Schema;
+    
+    // AuthToken schema
+    var authTokenSchema = new Schema({
+        // The token
+        token: {
+            type: String,
+            unique: true
+        },
+        
+        // The user associated with this token (if any)
+        user: {
+            type: Schema.Types.ObjectId,
+            ref: "User"
+        },
+        
+        // Whether the session associated with this token is a super-admin
+        // session (see config.js for details)
+        superAdmin: {
+            type: Boolean,
+            default: false
+        },
+        
+        // Data about games played with this session (only used if no user is
+        // logged in)
+        // keys: game IDs, values: objects
+        playedGames: Schema.Types.Mixed,
+
+        // The date that the token was created
+        dateCreated: {
+            type: Date,
+            default: Date.now
+        },
+
+        // The date that the token was last accessed
+        dateAccessed: {
+            type: Date,
+            default: Date.now
+        }
+    });
+    
+    
+    // AuthToken model instance method
+    authTokenSchema.methods.generateToken = function () {
+        return (this.token = generateToken());
+    };
+    
+    
+    // AuthToken model static method
+    authTokenSchema.statics.checkTokenFromReq = checkTokenFromReq;
+    
+    
+    // AuthToken model
+    return (AuthToken = mongoose.model("AuthToken", authTokenSchema));
+};
+
 
 /**
  * Generate a random, pretty guaranteed unique auth token.
@@ -83,61 +141,3 @@ function checkTokenFromReq(req, regenerateToken) {
         }
     });
 }
-
-
-module.exports = function (mongoose, extend) {
-    var Schema = mongoose.Schema;
-    
-    // AuthToken schema
-    var authTokenSchema = new Schema({
-        // The token
-        token: {
-            type: String,
-            unique: true
-        },
-        
-        // The user associated with this token (if any)
-        user: {
-            type: Schema.Types.ObjectId,
-            ref: "User"
-        },
-        
-        // Whether the session associated with this token is a super-admin
-        // session (see config.js for details)
-        superAdmin: {
-            type: Boolean,
-            default: false
-        },
-        
-        // Data about games played with this session (only used if no user is
-        // logged in)
-        // keys: game IDs, values: objects
-        playedGames: Schema.Types.Mixed,
-
-        // The date that the token was created
-        dateCreated: {
-            type: Date,
-            default: Date.now
-        },
-
-        // The date that the token was last accessed
-        dateAccessed: {
-            type: Date,
-            default: Date.now
-        }
-    });
-    
-    
-    // AuthToken model instance method
-    authTokenSchema.methods.generateToken = function () {
-        return (this.token = generateToken());
-    };
-    
-    
-    // AuthToken model static method
-    authTokenSchema.statics.checkTokenFromReq = checkTokenFromReq;
-    
-    
-    // AuthToken model
-    return (AuthToken = mongoose.model("AuthToken", authTokenSchema));
-};

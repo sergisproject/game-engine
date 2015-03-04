@@ -12,7 +12,7 @@ var config = require("../../config"),
 // The Action model (created in the `module.exports` function below)
 var Action;
 
-
+// Create the Action model
 module.exports = function (mongoose, extend) {
     var Schema = mongoose.Schema;
     

@@ -12,7 +12,7 @@ var config = require("../../config"),
 // The ContentComponent model (created in the `module.exports` function below)
 var ContentComponent;
 
-
+// Create the ContentComponent model
 module.exports = function (mongoose, extend) {
     var Schema = mongoose.Schema;
     

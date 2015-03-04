@@ -12,7 +12,7 @@ var config = require("../../config"),
 // The Game model (created in the `module.exports` function below)
 var Game;
 
-
+// Create the Game model
 module.exports = function (mongoose, extend) {
     var Schema = mongoose.Schema;
     

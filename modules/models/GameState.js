@@ -11,7 +11,7 @@ var config = require("../../config");
 // The GameState model (created in the `module.exports` function below)
 var GameState;
 
-
+// Create the GameState model
 module.exports = function (mongoose, extend) {
     var Schema = mongoose.Schema;
     

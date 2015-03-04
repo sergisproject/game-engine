@@ -14,5 +14,10 @@ var fs = require("fs"),
 var config = require("../config");
 
 module.exports = {
-    goto: {}
+    goto: {
+        // Parameters accepted by the handler
+        //params
+        
+        //handler: function (
+    }
 };
