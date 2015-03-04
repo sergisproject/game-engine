@@ -21,6 +21,46 @@ var config = require("../../config"),
 var router = module.exports = express.Router();
 
 
+// TESTING: This creates a "fake" game.
+router.get("/make", function (req, res) {
+    var randomGameID = Math.random().toString().substring(2, 6);
+    
+    // Make some game states
+    var gameStates = [
+        new db.models.GameState({
+            name: "Initial game state for make-" + randomGameID
+        })
+    ];
+    
+    // Function to save all the game states
+    function saveGameStates() {
+        var gameStateSavePromises = [];
+        gameStates.forEach(function (gameState) {
+            gameStateSavePromises.push(new Promise(function (resolve, reject) {
+                gameState.save(function (err) {
+                    if (err) reject(err);
+                    else resolve();
+                });
+            }));
+        });
+        return Promise.all(gameStateSavePromises);
+    };
+    
+    saveGameStates().then(function () {
+        // Make the game
+        var game = new db.models.Game({
+            name: "make-" + randomGameID,
+            displayName: "Random Game " + randomGameID,
+            initialGameState: gameStates[0]
+        });
+        game.save(function (err) {
+            if (err) throw err;
+            res.end("Created /game/make-" + randomGameID);
+        });
+    });
+});
+
+
 // Handler for GET requests to /game/GAME NAME HERE
 router.get("/:name", function (req, res) {
     // Get/set auth token

@@ -20,12 +20,6 @@ module.exports = function (mongoose, extend) {
         // A name for this game state
         name: String,
         
-        // The games that this game state is associated with
-        games: [{
-            type: Schema.Types.ObjectId,
-            ref: "Game"
-        }],
-        
         // The content components that are part of this game state
         contentComponents: [{
             // The geometry of the content component on the game page (CSS values)

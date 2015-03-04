@@ -51,7 +51,7 @@ module.exports = function (socket, next) {
                 }
                 
                 // We're all good; make GameSocket
-                new GameSocket(socket, game, user || null, callback);
+                new GameSocket(socket, game, authToken, callback);
             });
         });
     });

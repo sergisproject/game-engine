@@ -262,7 +262,7 @@ var pageHandlers = {
             }
             
             if (adminFunctions.hasOwnProperty(action)) {
-                adminFunctions[action](req.body).then(function (message) {
+                adminFunctions[action](req.body, authToken).then(function (message) {
                     // Everything was good, write out the admin page
                     pageHandlers.admin(req, res, authToken, message);
                 }, function (err) {
@@ -284,11 +284,13 @@ var pageHandlers = {
 
 /**
  * Admin functions.
- * Each function is passed one argument (the POST variables) and must return a
- * Promise.
+ * Each function is passed 2 arguments:
+ *    the POST variables, and 
+ *    the auth token for the current user.
+ * Each function must return a Promise.
  */
 var adminFunctions = {
-    createUser: function (post) {
+    createUser: function (post, authToken) {
         return new Promise(function (resolve, reject) {
             var username = post.u, password = post.p;
             if (username && password) {
@@ -297,7 +299,8 @@ var adminFunctions = {
                     name: post.name || undefined,
                     privileges: {
                         fullAdmin: post.fullAdmin === "fullAdmin"
-                    }
+                    },
+                    creator: authToken.user || undefined
                 });
                 // setPassword automatically saves (if it's successful) before resolving
                 user.setPassword(password).then(function () {
@@ -310,7 +313,7 @@ var adminFunctions = {
         });
     },
     
-    deleteUser: function (post) {
+    deleteUser: function (post, authToken) {
         return new Promise(function (resolve, reject) {
             // We know that post.deleteUser exists (since that's how we figured
             // out what the action was)
