@@ -55,7 +55,8 @@ module.exports = function (mongoose, extend) {
     });
     
     
-    // Get the games that this game state is associated with
+    // GameState model instance method
+    /** Get the games that this game state is associated with. */
     gameStateSchema.methods.getGames = function () {
         return findGamesByGameState(this);
     };
