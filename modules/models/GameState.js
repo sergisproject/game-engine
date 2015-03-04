@@ -17,6 +17,15 @@ module.exports = function (mongoose, extend) {
     
     // GameState schema
     var gameStateSchema = new Schema({
+        // A name for this game state
+        name: String,
+        
+        // The games that this game state is associated with
+        games: [{
+            type: Schema.Types.ObjectId,
+            ref: "Game"
+        }],
+        
         // The content components that are part of this game state
         contentComponents: [{
             // The geometry of the content component on the game page (CSS values)
@@ -46,6 +55,24 @@ module.exports = function (mongoose, extend) {
     });
     
     
+    // Get the games that this game state is associated with
+    gameStateSchema.methods.getGames = function () {
+        return findGamesByGameState(this);
+    };
+    
+    
     // GameState model
     return (GameState = mongoose.model("GameState", gameStateSchema));
 };
+
+
+/**
+ * Find the games that are associated with a game state.
+ * @param {GameState} gameState - The GameState that we are finding games for.
+ * @return {Promise.<Array.<Game>>} The games associated with this GameState.
+ */
+function findGamesByGameState(gameState) {
+    return new Promise(function (resolve, reject) {
+        //require("../db").models.Game.find({})...
+    });
+}
