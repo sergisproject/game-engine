@@ -59,6 +59,23 @@ module.exports = function (mongoose, extend) {
                 type: Boolean,
                 default: false
             }
+        },
+        
+        // Date that the user was created
+        userCreated: {
+            type: Date,
+            default: Date.now
+        },
+        
+        // Date that the password was last set
+        passwordCreated: {
+            type: Date
+        },
+        
+        // Who created this user (if anyone)
+        creator: {
+            type: Schema.Types.ObjectId,
+            ref: "User"
         }
     });
     
@@ -93,6 +110,7 @@ module.exports = function (mongoose, extend) {
         return new Promise(function (resolve, reject) {
             encryptPassword(password).then(function (encryptedPassword) {
                 user.encryptedPassword = encryptedPassword;
+                user.passwordCreated = Date.now();
                 user.save(function (err) {
                     if (err) {
                         reject(err);
