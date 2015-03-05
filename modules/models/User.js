@@ -50,7 +50,10 @@ module.exports = function (mongoose, extend) {
 
         // Data about the games that the user has played, by game
         // keys: game IDs, values: objects
-        playedGames: Schema.Types.Mixed,
+        playedGames: {
+            type: Schema.Types.Mixed,
+            default: {}
+        },
         
         // Privileges that the user has
         privileges: {
