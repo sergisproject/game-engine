@@ -250,23 +250,62 @@ GameSocket.handlers = {
         var actionSet = this.state.currentGameState.actionSets[data.actionSetIndex];
         if (!actionSet) {
             callback("Invalid data.");
+        } else if (actionSet.actions.length == 0) {
+            // No actions
+            callback(null);
         } else {
             var that = this;
-            actionSet.actions.forEach(function (action) {
-                var response;
-                action.doAction(this.state).then(function (_response) {
-                    // Step 1: store the response from the action's "doAction"
-                    // and save any changes made to the state.
-                    response = _response;
-                    return that.saveState();
-                }).then(function () {
-                    // Step 2: Reload the game state if necessary.
-                    if (response.reloadGameState) {
-                        return that.sendGameState();
-                    }
-                }).then(function () {
-                    // Step 3: Send socket events if necessary.
-                    
+            // Do each action, creating a Promise for each one
+            // (so we can call `callback` when they're all done).
+            Promise.all(actionSet.actions.map(function (action) {
+                return new Promise(function (resolve, reject) {
+                    var response;
+                    action.doAction(this.state).then(function (_response) {
+                        // Step 1: store the response from the action's "doAction"
+                        response = _response;
+                        // Save any changes made to the state, and continue after that's done
+                        return that.saveState();
+                    }).then(function () {
+                        // Step 2: Reload the game state if necessary.
+                        if (response.reloadGameState) {
+                            return that.sendGameState();
+                        }
+                    }).then(function () {
+                        // Step 3: Send socket events if necessary.
+                        if (response.socketEvents && Array.isArray(response.socketEvents)) {
+                            // Send each socket event, creating a Promise for each one
+                            // (so we'll continue when they're all sent).
+                            return Promise.all(response.socketEvents.map(function (socketEvent) {
+                                return new Promise(function (resolve, reject) {
+                                    if (socketEvent.waitForCallback) {
+                                        that.socket.emit(socketEvent.event, socketEvent.data, function () {
+                                            resolve();
+                                        });
+                                    } else {
+                                        that.socket.emit(socketEvent.event, socketEvent.data);
+                                        resolve();
+                                    }
+                                });
+                            }));
+                        }
+                    }).then(function () {
+                        // All done!
+                        if (++actionsCompleted >= actionsTotal) {
+                            // Everything is completed
+                            callback(null);
+                        }
+                    }).catch(function (err) {
+                        config.error(err, "performing actionSet " + data.actionSetIndex);
+                        callback("Error performing actions.");
+                    });
+                });
+            })).then(function () {
+                // All done! All good!
+                callback(null);
+            }, function (err) {
+                // Ahh! Something error'd out!
+                config.error(err, "performing actionSet " + data.actionSetIndex);
+                callback("Error completing action set.");
             });
         }
     }

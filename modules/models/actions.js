@@ -22,7 +22,10 @@ var config = require("../../config"),
           - reloadGameState {boolean} - whether to reload the game state (i.e.
             if it has been changed)
           - socketEvents {Array.<Object>} - Socket events to send to the client.
-            Each object should have an `event` (string) and `data` (object).
+            Each object should have an `event` (string) and `data` (object) and,
+            optionally, a `waitForCallback` (boolean), indicating that it should
+            wait for the client to call a callback before continuing to the next
+            event.
 
   - Each child of Action must define these static methods:
       - getDescription() : string
