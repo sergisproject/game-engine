@@ -9,6 +9,28 @@ var config = require("../../config"),
     actionTypes = require("../actionTypes");
 
 
+/*
+  NOTES ON ACTION MODELS
+  ======================
+  - All action models are children of the Action model (schema defined in
+    `module.exports` below).
+
+  - Each child of Action must define these instance methods:
+      - doAction(state) : Promise
+        The state param is a GameSocket.state object (see gameSocketHandler.js).
+        The Promise should be resolved with an object with these properties:
+          - reloadGameState {boolean} - whether to reload the game state (i.e.
+            if it has been changed)
+          - socketEvents {Array.<Object>} - Socket events to send to the client.
+            Each object should have an `event` (string) and `data` (object).
+
+  - Each child of Action must define these static methods:
+      - getDescription() : string
+        Returns a general description of the action (could be used in an
+        authoring environment).
+*/
+
+
 // The Action schema (created in the `module.exports` function below)
 var actionSchema;
 
@@ -60,8 +82,14 @@ var actionModelConstructors = {
         });
         
         // Perform the action
-        goToGameStateSchema.methods.doAction = function () {
-            
+        goToGameStateSchema.methods.doAction = function (state) {
+            var that = this;
+            return new Promise(function (resolve, reject) {
+                state.currentGameState = that.params.nextGameState;
+                resolve({
+                    reloadGameState: true
+                });
+            });
         };
         
         // A description, used in any sort of authoring environment
@@ -95,6 +123,22 @@ var actionModelConstructors = {
                 }
             }
         });
+        
+        // Perform the action
+        messageContentComponentSchema.methods.doAction = function (state) {
+            var that = this;
+            return new Promise(function (resolve, reject) {
+                resolve({
+                    socketEvents: [{
+                        event: "messageContentComponent",
+                        data: {
+                            contentComponent: that.contentComponent._id || that.contentComponent,
+                            message: that.message
+                        }
+                    }]
+                });
+            });
+        };
         
         // A description, used in any sort of authoring environment
         messageContentComponentSchema.statics.getDescription = function () {

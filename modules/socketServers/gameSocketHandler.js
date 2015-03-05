@@ -42,8 +42,8 @@ module.exports = function (socket, next) {
                 return;
             }
             
-            // Check game ID
-            db.models.Game.findOne({name: gameName}).populate("gameStates").exec(function (err, game) {
+            // Check game name
+            db.models.Game.findOne({name: gameName}).populate("initialGameState").exec(function (err, game) {
                 if (err || !game) {
                     if (err) config.error(err, "getting game from game name");
                     callback("Invalid game name.");
@@ -126,7 +126,7 @@ function GameSocket(socket, game, authToken, initialCallback) {
         if (!this.authToken.user.playedGames[this.game._id]) {
             this.authToken.user.playedGames[this.game._id] = {
                 userVars: {},
-                currentGameStateIndex: this.game.initialGameStateIndex
+                currentGameState: this.game.initialGameState
             };
         }
         // Store reference to the current user/game state
@@ -136,7 +136,7 @@ function GameSocket(socket, game, authToken, initialCallback) {
         if (!this.authToken.playedGames[this.game._id]) {
             this.authToken.playedGames[this.game._id] = {
                 userVars: {},
-                currentGameStateIndex: this.game.initialGameStateIndex
+                currentGameState: this.game.initialGameState
             };
         }
         // Store reference to the current session/game state
@@ -217,6 +217,11 @@ GameSocket.handlers = {
      * @param {GameSocket~requestCallback} callback
      */
     setUserVar: function (data, callback) {
+        if (!data || !data.name) {
+            callback("Invalid data.");
+            return;
+        }
+        
         this.state.userVars[data.name] = data.value;
         this.saveState().then(function () {
             callback(null);
@@ -224,5 +229,45 @@ GameSocket.handlers = {
             config.error(err, "setting user var");
             callback("Error setting user var.");
         });
+    },
+    
+    /**
+     * Handler for client socket "chooseActionSet" event.
+     * Called by the client to perform all the actions in one of the current
+     * GameState's actionSets.
+     *
+     * @this GameSocket
+     * @param {object} data - actionSetIndex (number): the index of the action
+     *                        set to choose in the GameState's actionSet array.
+     * @param {GameSocket~requestCallback} callback
+     */
+    chooseActionSet: function (data, callback) {
+        if (!data || typeof data.actionSetIndex != "number") {
+            callback("Invalid data.");
+            return;
+        }
+        
+        var actionSet = this.state.currentGameState.actionSets[data.actionSetIndex];
+        if (!actionSet) {
+            callback("Invalid data.");
+        } else {
+            var that = this;
+            actionSet.actions.forEach(function (action) {
+                var response;
+                action.doAction(this.state).then(function (_response) {
+                    // Step 1: store the response from the action's "doAction"
+                    // and save any changes made to the state.
+                    response = _response;
+                    return that.saveState();
+                }).then(function () {
+                    // Step 2: Reload the game state if necessary.
+                    if (response.reloadGameState) {
+                        return that.sendGameState();
+                    }
+                }).then(function () {
+                    // Step 3: Send socket events if necessary.
+                    
+            });
+        }
     }
 };
