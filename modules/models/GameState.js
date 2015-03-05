@@ -22,13 +22,13 @@ module.exports = function (mongoose, extend) {
         
         // The content components that are part of this game state
         contentComponents: [{
-            // The geometry of the content component on the game page (CSS values)
+            // The geometry of the content component on the game page
+            // (percents)
             geometry: {
-                left: String,
-                right: String,
-                top: String,
-                width: String,
-                height: String
+                left: Number,
+                top: Number,
+                width: Number,
+                height: Number
             },
 
             // The content component to display in this space
