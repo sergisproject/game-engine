@@ -40,6 +40,12 @@ module.exports = function (mongoose, extend) {
 
         // The action sets that can be chosen as part of this game state
         actionSets: [{
+            // Whether the actions in this set should be executed asynchronously
+            async: {
+                type: Boolean,
+                default: false
+            },
+            
             // The actions that are part of this action set
             actions: [{
                 type: Schema.Types.ObjectId,

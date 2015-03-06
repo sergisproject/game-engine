@@ -247,66 +247,167 @@ GameSocket.handlers = {
             return;
         }
         
-        var actionSet = this.state.currentGameState.actionSets[data.actionSetIndex];
+        //var actionSet = this.state.currentGameState.actionSets[data.actionSetIndex];
+        var actionSet = {
+            actions: [
+                {
+                    doAction: function () {
+                        return new Promise(function (resolve, reject) {
+                            console.log("Doing action #1");
+                            setTimeout(function () {
+                                console.log("Finished action #1");
+                                resolve({});
+                            }, 1000);
+                        });
+                    }
+                },
+                {
+                    doAction: function () {
+                        return new Promise(function (resolve, reject) {
+                            console.log("Doing action #2");
+                            setTimeout(function () {
+                                console.log("Finished action #2");
+                                resolve({});
+                            }, 1000);
+                        });
+                    }
+                },
+                {
+                    doAction: function () {
+                        return new Promise(function (resolve, reject) {
+                            console.log("Doing action #3");
+                            setTimeout(function () {
+                                console.log("Finished action #3");
+                                resolve({});
+                            }, 1000);
+                        });
+                    }
+                }
+            ]
+        };
+        
         if (!actionSet) {
             callback("Invalid data.");
         } else if (actionSet.actions.length == 0) {
             // No actions
             callback(null);
         } else {
-            var that = this;
-            // Do each action, creating a Promise for each one
-            // (so we can call `callback` when they're all done).
-            Promise.all(actionSet.actions.map(function (action) {
-                return new Promise(function (resolve, reject) {
-                    var response;
-                    action.doAction(this.state).then(function (_response) {
-                        // Step 1: store the response from the action's "doAction"
-                        response = _response;
-                        // Save any changes made to the state, and continue after that's done
-                        return that.saveState();
-                    }).then(function () {
-                        // Step 2: Reload the game state if necessary.
-                        if (response.reloadGameState) {
-                            return that.sendGameState();
-                        }
-                    }).then(function () {
-                        // Step 3: Send socket events if necessary.
-                        if (response.socketEvents && Array.isArray(response.socketEvents)) {
-                            // Send each socket event, creating a Promise for each one
-                            // (so we'll continue when they're all sent).
-                            return Promise.all(response.socketEvents.map(function (socketEvent) {
-                                return new Promise(function (resolve, reject) {
-                                    if (socketEvent.waitForCallback) {
-                                        that.socket.emit(socketEvent.event, socketEvent.data, function () {
-                                            resolve();
-                                        });
-                                    } else {
-                                        that.socket.emit(socketEvent.event, socketEvent.data);
-                                        resolve();
-                                    }
-                                });
-                            }));
-                        }
-                    }).then(function () {
-                        // All done!
-                        if (++actionsCompleted >= actionsTotal) {
-                            // Everything is completed
-                            callback(null);
-                        }
-                    }).catch(function (err) {
-                        config.error(err, "performing actionSet " + data.actionSetIndex);
-                        callback("Error performing actions.");
-                    });
-                });
-            })).then(function () {
-                // All done! All good!
+            var actionsPromise;
+            // Run asynchronously?
+            if (actionSet.async) {
+                actionsPromise = runActionsAsync(this, actionSet);
+            } else {
+                actionsPromise = runActions(this, actionSet);
+            }
+            // Call the callback when we're done
+            actionsPromise.then(function (gameStateNeedsReloading) {
+                // Check if game state needs reloading
+                if (gameStateNeedsReloading) {
+                    console.log("::: UPDATE GAME STATE :::");
+                    // return updateGameState_PromiseReturningFunction(...);
+                }
+            }).then(function () {
+                // All done! Success!
                 callback(null);
             }, function (err) {
-                // Ahh! Something error'd out!
+                // Fail!
                 config.error(err, "performing actionSet " + data.actionSetIndex);
                 callback("Error completing action set.");
             });
         }
     }
 };
+
+
+
+/**
+ * Run some actions asynchronously.
+ *
+ * @param {GameSocket} gameSocket - The GameSocket with the current state.
+ * @param {Object} actionSet - The actionSet (see models/GameState.js).
+ *
+ * @return {Promise.<Boolean>} Resolved when all the actions are complete;
+ *         resolved to `true` if the game state needs to be reloaded.
+ */
+function runActionsAsync(gameSocket, actionSet) {
+    // Do each action, creating a Promise for each one
+    // (so we can call `callback` when they're all done).
+    var gameStateNeedsReloading = false;
+    return Promise.all(actionSet.actions.map(function (action) {
+        return runAction(gameSocket, action).then(function (_gameStateNeedsReloading) {
+            if (_gameStateNeedsReloading) gameStateNeedsReloading = true;
+        });
+    }));
+}
+
+
+/**
+ * Run some actions synchronously.
+ *
+ * @param {GameSocket} gameSocket - The GameSocket with the current state.
+ * @param {Object} actionSet - The actionSet (see models/GameState.js).
+ * @param {Number} [currentAction=0] - The action to do.
+ * @param {Boolean} [gameStateNeedsReloading=false] - Whether the game state
+ *        needs reloading (so far).
+ *
+ * @return {Promise.<Boolean>} Resolved when all the actions are complete;
+ *         resolved to `true` if the game state needs to be reloaded.
+ */
+function runActions(gameSocket, actionSet, currentAction, gameStateNeedsReloading) {
+    return new Promise(function (resolve, reject) {
+        // Do the actions in the set one by one
+        if (!currentAction) currentAction = 0;
+        if (actionSet.actions[currentAction]) {
+            // We have an action to do!
+            runAction(gameSocket, actionSet.actions[currentAction]).then(function (_gameStateNeedsReloading) {
+                // Run the next action
+                resolve(runActions(gameSocket, actionSet, currentAction + 1, gameStateNeedsReloading || _gameStateNeedsReloading));
+            }, reject);
+        } else {
+            // All done
+            resolve(!!gameStateNeedsReloading);
+        }
+    });
+}
+
+
+/**
+ * Run a single action.
+ *
+ * @param {GameSocket} gameSocket - The GameSocket with the current state.
+ * @param {Action} action - The action to run (see models/actions.js).
+ *
+ * @return {Promise.<Boolean>} Resolved when running the action is complete;
+ *         resolved to `true` if the game state needs to be reloaded.
+ */
+function runAction(gameSocket, action) {
+    console.log("RUNNING ACTION: ", action);
+    var response;
+    return action.doAction(gameSocket.state).then(function (_response) {
+        // Step 1: store the response from the action's "doAction"
+        response = _response;
+        // Save any changes made to the state, and continue after that's done
+        return gameSocket.saveState();
+    }).then(function () {
+        // Step 3: Send socket events if necessary.
+        if (response.socketEvents && Array.isArray(response.socketEvents)) {
+            // Send each socket event, creating a Promise for each one
+            // (so we'll continue when they're all sent).
+            return Promise.all(response.socketEvents.map(function (socketEvent) {
+                return new Promise(function (resolve, reject) {
+                    if (socketEvent.waitForCallback) {
+                        gameSocket.socket.emit(socketEvent.event, socketEvent.data, function () {
+                            resolve();
+                        });
+                    } else {
+                        gameSocket.socket.emit(socketEvent.event, socketEvent.data);
+                        resolve();
+                    }
+                });
+            }));
+        }
+    }).then(function () {
+        // Resolve the promise with whether the game state needs reloading
+        return !!response.reloadGameState;
+    });
+}
